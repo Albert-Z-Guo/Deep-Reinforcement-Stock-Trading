@@ -24,7 +24,6 @@ for e in range(episode_count + 1):
 
 	for t in range(l):
 		action = agent.act(state)
-
 		next_state = generate_state(stock_prices, t + 1, window_size + 1)
 		reward = 0
 
