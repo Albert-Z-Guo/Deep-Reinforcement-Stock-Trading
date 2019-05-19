@@ -1,10 +1,9 @@
 import sys
 
-import keras
 from keras.models import load_model
 
 from utils import *
-from agent.agent import Agent
+from agents.DQN import Agent
 
 
 if len(sys.argv) != 3:
@@ -24,7 +23,7 @@ state = generate_state(stock_prices, 0, window_size + 1)
 total_profit = 0
 agent.inventory = []
 
-for t in xrange(l):
+for t in range(l):
 	action = agent.act(state)
 
 	next_state = generate_state(stock_prices, t + 1, window_size + 1)

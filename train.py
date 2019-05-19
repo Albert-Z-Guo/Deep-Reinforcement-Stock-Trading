@@ -1,7 +1,5 @@
 import sys
 
-from six.moves import xrange
-
 from utils import *
 from agents.DQN import Agent
 
@@ -17,14 +15,14 @@ l = len(stock_prices) - 1
 batch_size = 32
 
 
-for e in xrange(episode_count + 1):
+for e in range(episode_count + 1):
 	print("Episode " + str(e) + "/" + str(episode_count))
 	state = generate_state(stock_prices, 0, window_size + 1)
 
 	total_profit = 0
 	agent.inventory = []
 
-	for t in xrange(l):
+	for t in range(l):
 		action = agent.act(state)
 
 		next_state = generate_state(stock_prices, t + 1, window_size + 1)

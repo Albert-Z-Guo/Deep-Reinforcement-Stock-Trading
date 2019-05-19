@@ -1,5 +1,4 @@
 import numpy as np
-from six.moves import xrange
 
 
 def format_price(n):
@@ -24,6 +23,6 @@ def generate_state(stock_prices, t, n):
 	d = t - n + 1
 	block = stock_prices[d:t + 1] if d >= 0 else -d * [stock_prices[0]] + stock_prices[0:t + 1] # pad with t_0
 	res = []
-	for i in xrange(n - 1):
+	for i in range(n - 1):
 		res.append(sigmoid(block[i + 1] - block[i]))
 	return np.array([res])
