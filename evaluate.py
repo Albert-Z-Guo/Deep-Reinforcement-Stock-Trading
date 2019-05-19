@@ -3,7 +3,7 @@ import sys
 import keras
 from keras.models import load_model
 
-from functions import *
+from utils import *
 from agent.agent import Agent
 
 
@@ -33,7 +33,7 @@ for t in xrange(l):
 	if action == 1: # buy
 		agent.inventory.append(stock_prices[t])
 		print("Buy: " + format_price(stock_prices[t]))
-		
+
 	elif action == 2 and len(agent.inventory) > 0: # sell
 		bought_price = agent.inventory.pop(0)
 		reward = max(stock_prices[t] - bought_price, 0)

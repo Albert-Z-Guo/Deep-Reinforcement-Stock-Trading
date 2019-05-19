@@ -2,7 +2,7 @@ import sys
 
 from six.moves import xrange
 
-from functions import *
+from utils import *
 from agents.DQN import Agent
 
 
