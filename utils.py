@@ -19,7 +19,11 @@ def sigmoid(x):
 
 
 def generate_state(stock_prices, t, n):
-	'''return an n-day state representation ending at time t'''
+	'''
+	return an n-day state representation ending at time t
+	the state is defined as the adjacent daily stock price differences for a n-day period
+
+	'''
 	d = t - n + 1
 	block = stock_prices[d:t + 1] if d >= 0 else -d * [stock_prices[0]] + stock_prices[0:t + 1] # pad with t_0
 	res = []

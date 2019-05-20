@@ -47,11 +47,11 @@ for e in range(episode_count + 1):
 			print("Total Profit: " + format_price(total_profit))
 			print("--------------------------------")
 
-		agent.memory.append((state, action, reward, next_state, done))
+		agent.remember(state, action, reward, next_state, done)
 		state = next_state
 
 		if len(agent.memory) > batch_size:
-			agent.expReplay(batch_size)
+			agent.reinforce(batch_size)
 
 	if e % 10 == 0:
 		agent.model.save("models/model_ep" + str(e))

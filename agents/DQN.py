@@ -31,26 +31,30 @@ class Agent:
 		model.compile(loss="mse", optimizer=Adam(lr=0.001))
 		return model
 
+	def remember(self, state, action, reward, next_state, done):
+		self.memory.append((state, action, reward, next_state, done))
+
 	def act(self, state):
 		if not self.is_eval and np.random.rand() <= self.epsilon:
 			return random.randrange(self.action_size)
 		options = self.model.predict(state)
 		return np.argmax(options[0])
 
-	def expReplay(self, batch_size):
+	def reinforce(self, batch_size):
+		# retrieve recent batch_size long memory
 		mini_batch = []
 		l = len(self.memory)
 		for i in range(l - batch_size + 1, l):
 			mini_batch.append(self.memory[i])
 
 		for state, action, reward, next_state, done in mini_batch:
-			target = reward
 			if not done:
 				target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
-
-			target_f = self.model.predict(state)
-			target_f[0][action] = target
-			self.model.fit(state, target_f, epochs=1, verbose=0)
+			else:
+				target = reward
+			target_future = self.model.predict(state)
+			target_future[0][action] = target
+			self.model.fit(state, target_future, epochs=1, verbose=0)
 
 		if self.epsilon > self.epsilon_min:
 			self.epsilon *= self.epsilon_decay
