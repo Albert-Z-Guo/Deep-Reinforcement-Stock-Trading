@@ -14,15 +14,9 @@ stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.
 stock_prices = stock_close_prices(stock_name)
 l = len(stock_prices) - 1
 
-# Tensorflow GPU configuration
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
+agent = Agent(state_dim=window_size+2)
 
-agent = Agent(window_size + 2, sess)
-
-
-for e in range(episode_count + 1):
+for e in range(1, episode_count + 1):
     print("Episode " + str(e) + "/" + str(episode_count))
     total_profit = 0
 	# skip random process for action exploration
@@ -47,15 +41,13 @@ for e in range(episode_count + 1):
             print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
         # hold
         else:
-            print('Hold')
-            pass  # do nothing
+            pass # do nothing
 
         done = True if t == l - 1 else False
         if done:
             print("--------------------------------")
             print("Total Profit: " + format_price(total_profit))
             print("--------------------------------")
-            exit()
 
         agent.memory.append((state, actions, reward, next_state, done))
         state = next_state
@@ -65,5 +57,5 @@ for e in range(episode_count + 1):
             # print("Episode", e, "Step", t, "Action", action, "Reward", reward, "Loss", loss)
 
     if e % 10 == 0:
-        agent.actor.save("saved_models/DDPG_ep" + str(e))
+        agent.actor.model.save('saved_models/DDPG_ep' + str(e) + '.h5')
         print('model saved')

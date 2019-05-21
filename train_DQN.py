@@ -7,13 +7,13 @@ from agents.DQN import Agent
 if len(sys.argv) != 4:
 	print("Usage: python train.py [stock] [window] [episodes]")
 	exit()
-stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 
-agent = Agent(window_size)
+stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 stock_prices = stock_close_prices(stock_name)
 l = len(stock_prices) - 1
 batch_size = 32
 
+agent = Agent(window_size)
 
 for e in range(1, episode_count + 1):
 	print("Episode " + str(e) + "/" + str(episode_count))

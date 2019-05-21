@@ -11,18 +11,21 @@ from keras.optimizers import Adam
 
 
 class ActorNetwork:
-    def __init__(self, sess, state_size, action_size, batch_size, tau, learning_rate):
+    def __init__(self, sess, state_size, action_size, batch_size, tau, learning_rate, is_eval=False, model_name=""):
         self.sess = sess
         self.batch_size = batch_size
         self.tau = tau
         self.learning_rate = learning_rate
         K.set_session(sess)
-        self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
-        self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_size)
-        self.action_gradient = tf.placeholder(tf.float32, [None, action_size])
-        self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
-        self.optimize = tf.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
-        self.sess.run(tf.global_variables_initializer())
+        if is_eval == True:
+            self.model = load_model("saved_models/" + model_name)
+        else:
+            self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
+            self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_size)
+            self.action_gradient = tf.placeholder(tf.float32, [None, action_size])
+            self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
+            self.optimize = tf.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
+            self.sess.run(tf.global_variables_initializer())
 
     def train(self, states, action_grads):
         self.sess.run(self.optimize, feed_dict={self.state: states, self.action_gradient: action_grads})
@@ -38,9 +41,9 @@ class ActorNetwork:
         S = Input(shape=[state_size])
         h0 = Dense(HIDDEN1_UNITS, activation='relu')(S)
         h1 = Dense(HIDDEN2_UNITS, activation='relu')(h0)
-        buy = Dense(1, activation='tanh', kernel_initializer=lambda shape: VarianceScaling(scale=1e-4)(shape))(h1)
-        hold = Dense(1, activation='sigmoid', kernel_initializer=lambda shape: VarianceScaling(scale=1e-4)(shape))(h1)
-        sell = Dense(1, activation='sigmoid', kernel_initializer=lambda shape: VarianceScaling(scale=1e-4)(shape))(h1)
+        buy = Dense(1, activation='tanh')(h1)
+        hold = Dense(1, activation='sigmoid')(h1)
+        sell = Dense(1, activation='sigmoid')(h1)
         A = Concatenate()([buy, hold, sell])
         model = Model(inputs=S, outputs=A)
         return model, model.trainable_weights, S
@@ -88,7 +91,7 @@ class CriticNetwork:
 
 
 class Agent:
-    def __init__(self, state_dim, sess, is_eval=False, model_name=""):
+    def __init__(self, state_dim, is_eval=False, model_name=""):
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=1000)
@@ -102,7 +105,11 @@ class Agent:
         tau = 0.001  # Target Network Hyper Parameter
         LRA = 0.0001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
-        self.actor = ActorNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRA)
+        # Tensorflow GPU configuration
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        sess = tf.Session(config=config)
+        self.actor = ActorNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRA, is_eval, model_name)
         self.critic = CriticNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRC)
 
     def remember(self, state, action, reward, next_state, done):
