@@ -11,7 +11,7 @@ if len(sys.argv) != 3:
 	exit()
 
 stock_name, model_name = sys.argv[1], sys.argv[2]
-model = load_model("models/" + model_name)
+model = load_model("saved_models/" + model_name)
 window_size = model.layers[0].input.shape.as_list()[1]
 
 agent = Agent(window_size, True, model_name)
@@ -19,9 +19,9 @@ stock_prices = stock_close_prices(stock_name)
 l = len(stock_prices) - 1
 batch_size = 32
 
-state = generate_state(stock_prices, 0, window_size + 1)
 total_profit = 0
 agent.inventory = []
+state = generate_state(stock_prices, 0, window_size + 1)
 
 for t in range(l):
 	action = agent.act(state)
