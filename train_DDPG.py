@@ -63,3 +63,7 @@ for e in range(episode_count + 1):
         if len(agent.memory) > agent.batch_size:
             loss += agent.experience_replay(agent.batch_size, e, t, loss)
             # print("Episode", e, "Step", t, "Action", action, "Reward", reward, "Loss", loss)
+
+    if e % 10 == 0:
+        agent.actor.save("saved_models/DDPG_ep" + str(e))
+        print('model saved')

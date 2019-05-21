@@ -55,4 +55,5 @@ for e in range(episode_count + 1):
 			agent.experience_replay(batch_size)
 
 	if e % 10 == 0:
-		agent.model.save("models/model_ep" + str(e))
+		agent.model.save("saved_models/DQN_ep" + str(e))
+		print('model saved')
