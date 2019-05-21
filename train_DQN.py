@@ -15,7 +15,7 @@ l = len(stock_prices) - 1
 batch_size = 32
 
 
-for e in range(episode_count + 1):
+for e in range(1, episode_count + 1):
 	print("Episode " + str(e) + "/" + str(episode_count))
 	state = generate_state(stock_prices, 0, window_size + 1)
 
@@ -46,7 +46,6 @@ for e in range(episode_count + 1):
 			print("--------------------------------")
 			print("Total Profit: " + format_price(total_profit))
 			print("--------------------------------")
-			exit()
 
 		agent.remember(state, action, reward, next_state, done)
 		state = next_state
@@ -55,5 +54,5 @@ for e in range(episode_count + 1):
 			agent.experience_replay(batch_size)
 
 	if e % 10 == 0:
-		agent.model.save("saved_models/DQN_ep" + str(e))
+		agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
 		print('model saved')
