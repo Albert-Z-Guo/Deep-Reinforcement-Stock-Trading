@@ -46,6 +46,7 @@ for e in range(episode_count + 1):
 			print("--------------------------------")
 			print("Total Profit: " + format_price(total_profit))
 			print("--------------------------------")
+			exit()
 
 		agent.remember(state, action, reward, next_state, done)
 		state = next_state
