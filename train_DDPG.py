@@ -19,7 +19,6 @@ agent = Agent(state_dim=window_size+2)
 for e in range(1, episode_count + 1):
     print("Episode " + str(e) + "/" + str(episode_count))
     total_profit = 0
-	# skip random process for action exploration
     state = generate_ddpg_state(stock_prices, 0, window_size + 1, total_profit, len(agent.inventory))
 
     for t in range(l):

@@ -116,7 +116,10 @@ class Agent:
     	self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-    	return np.argmax(self.actor.model.predict(state)[0])
+        if not self.is_eval and np.random.rand() <= self.epsilon:
+            exploration_noise = np.random.random(self.action_dim)
+            return np.argmax(self.actor.model.predict(state)[0] + exploration_noise)
+        return np.argmax(self.actor.model.predict(state)[0])
 
     def experience_replay(self, batch_size, e, t, loss):
         # retrieve recent batch_size long memory from deque
