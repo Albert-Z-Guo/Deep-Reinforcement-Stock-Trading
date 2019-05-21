@@ -51,7 +51,7 @@ for e in range(episode_count + 1):
 		state = next_state
 
 		if len(agent.memory) > batch_size:
-			agent.reinforce(batch_size)
+			agent.experience_replay(batch_size)
 
 	if e % 10 == 0:
 		agent.model.save("models/model_ep" + str(e))

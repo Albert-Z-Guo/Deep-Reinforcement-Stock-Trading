@@ -43,7 +43,7 @@ for t in range(l):
 		pass # hold stocks if action is not 1 or 2
 
 	done = True if t == l - 1 else False
-	agent.memory.append((state, action, reward, next_state, done))
+	agent.remember(state, action, reward, next_state, done)
 	state = next_state
 
 	if done:

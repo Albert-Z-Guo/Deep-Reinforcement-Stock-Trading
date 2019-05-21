@@ -21,12 +21,24 @@ def sigmoid(x):
 def generate_state(stock_prices, t, n):
 	'''
 	return an n-day state representation ending at time t
-	the state is defined as the adjacent daily stock price differences for a n-day period
-
+	the state is defined as the adjacent daily stock price differences (sigmoid)
+	for a n-day period
 	'''
 	d = t - n + 1
 	block = stock_prices[d:t + 1] if d >= 0 else -d * [stock_prices[0]] + stock_prices[0:t + 1] # pad with t_0
 	res = []
 	for i in range(n - 1):
 		res.append(sigmoid(block[i + 1] - block[i]))
+	return np.array([res])
+
+
+def generate_ddpg_state(stock_prices, t, n, total_profit, num_holding):
+	d = t - n + 1
+	block = stock_prices[d:t + 1] if d >= 0 else -d * [stock_prices[0]] + stock_prices[0:t + 1] # pad with t_0
+	res = []
+	for i in range(n - 1):
+		res.append(sigmoid(block[i + 1] - block[i]))
+
+	res.append(total_profit)
+	res.append(num_holding)
 	return np.array([res])

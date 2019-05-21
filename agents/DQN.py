@@ -11,7 +11,7 @@ from keras.optimizers import Adam
 class Agent:
 	def __init__(self, state_size, is_eval=False, model_name=""):
 		self.state_size = state_size # normalized previous days
-		self.action_size = 3 # hold, buy, sell
+		self.action_space = 3 # hold, buy, sell
 		self.memory = deque(maxlen=1000)
 		self.inventory = []
 		self.gamma = 0.95
@@ -27,7 +27,7 @@ class Agent:
 		model.add(Dense(units=64, input_dim=self.state_size, activation="relu"))
 		model.add(Dense(units=32, activation="relu"))
 		model.add(Dense(units=8, activation="relu"))
-		model.add(Dense(self.action_size, activation="linear"))
+		model.add(Dense(self.action_space, activation="linear"))
 		model.compile(loss="mse", optimizer=Adam(lr=0.001))
 		return model
 
@@ -36,11 +36,11 @@ class Agent:
 
 	def act(self, state):
 		if not self.is_eval and np.random.rand() <= self.epsilon:
-			return random.randrange(self.action_size)
+			return random.randrange(self.action_space)
 		options = self.model.predict(state)
 		return np.argmax(options[0])
 
-	def reinforce(self, batch_size):
+	def experience_replay(self, batch_size):
 		# retrieve recent batch_size long memory
 		mini_batch = []
 		l = len(self.memory)
