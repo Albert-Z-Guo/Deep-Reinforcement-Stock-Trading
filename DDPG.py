@@ -116,10 +116,6 @@ stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.
 stock_prices = stock_close_prices(stock_name)
 l = len(stock_prices) - 1
 
-agent = Agent(state_size=window_size + 2)
-stock_prices = stock_close_prices(stock_name)
-l = len(stock_prices) - 1
-
 BATCH_SIZE = 32
 state_dim = window_size + 2
 action_dim = 3  # hold, buy, sell
@@ -130,7 +126,7 @@ epsilon = 1.0
 epsilon_min = 0.01
 epsilon_decay = 0.995
 is_eval = False
-TAU = 0.001  # Target Network HyperParameters
+TAU = 0.001  # Target Network Hyper Parameter
 LRA = 0.0001  # Learning rate for Actor
 LRC = 0.001  # Lerning rate for Critic
 
@@ -169,7 +165,7 @@ for e in range(episode_count + 1):
             print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
         # hold
         else:
-            # print('holding stocks')
+            print('Hold')
             pass  # do nothing
 
         done = True if t == l - 1 else False
@@ -177,6 +173,7 @@ for e in range(episode_count + 1):
             print("--------------------------------")
             print("Total Profit: " + format_price(total_profit))
             print("--------------------------------")
+            exit()
 
         memory.append((state, actions, reward, next_state, done))
         state = next_state
@@ -184,8 +181,8 @@ for e in range(episode_count + 1):
         if len(memory) > BATCH_SIZE:
             # retrieve recent batch_size long memory
             mini_batch = []
-            l = len(memory)
-            for i in range(l - BATCH_SIZE + 1, l):
+            memory_len = len(memory)
+            for i in range(memory_len - BATCH_SIZE + 1, memory_len):
                 mini_batch.append(memory[i])
 
             y_batch = []
@@ -196,7 +193,7 @@ for e in range(episode_count + 1):
                     target_q_values = critic.target_model.predict([next_state, actor.target_model.predict(next_state)])
                     y = reward + GAMMA * target_q_values
                 else:
-                    y = reward
+                    y = reward * np.ones((1, action_dim))
                 y_batch.append(y)
                 state_batch.append(state)
                 actions_batch.append(actions)
@@ -210,6 +207,8 @@ for e in range(episode_count + 1):
             actor.train(state_batch, grads)
             actor.target_train()
             critic.target_train()
+
+            # print("Episode", e, "Step", t, "Action", action, "Reward", reward, "Loss", loss)
 
             if epsilon > epsilon_min:
                 epsilon *= epsilon_decay
