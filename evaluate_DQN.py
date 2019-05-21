@@ -21,6 +21,7 @@ batch_size = 32
 
 total_profit = 0
 agent.inventory = []
+window_size = state_dim
 state = generate_state(stock_prices, 0, window_size + 1)
 
 for t in range(l):

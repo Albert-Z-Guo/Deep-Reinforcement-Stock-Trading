@@ -98,10 +98,10 @@ class Agent:
         self.batch_size = 32
         self.inventory = []
         self.gamma = 0.95 # discount factor
-        self.epsilon = 1.0
-        self.epsilon_min = 0.01
+        self.epsilon = 1.0 # initial exploration rate
+        self.epsilon_min = 0.01 # minimum exploration rate
         self.epsilon_decay = 0.995
-        self.is_eval = False
+        self.is_eval = is_eval
         tau = 0.001  # Target Network Hyper Parameter
         LRA = 0.0001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
