@@ -55,6 +55,6 @@ for e in range(1, episode_count + 1):
             loss += agent.experience_replay(agent.batch_size, e, t, loss)
             # print("Episode", e, "Step", t, "Action", action, "Reward", reward, "Loss", loss)
 
-    if e % 10 == 0:
+    if e % 50 == 0:
         agent.actor.model.save('saved_models/DDPG_ep' + str(e) + '.h5')
         print('model saved')

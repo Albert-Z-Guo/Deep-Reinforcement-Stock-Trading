@@ -53,6 +53,6 @@ for e in range(1, episode_count + 1):
 		if len(agent.memory) > batch_size:
 			agent.experience_replay(batch_size)
 
-	if e % 10 == 0:
+	if e % 50 == 0:
 		agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
 		print('model saved')
