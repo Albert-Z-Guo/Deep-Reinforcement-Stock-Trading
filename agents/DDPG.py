@@ -97,10 +97,11 @@ class Agent:
         self.memory = deque(maxlen=1000)
         self.batch_size = 32
         self.inventory = []
+        self.balance = 1000000
         self.gamma = 0.95 # discount factor
         self.epsilon = 1.0 # initial exploration rate
-        self.epsilon_min = 0.01 # minimum exploration rate
-        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.1 # minimum exploration rate
+        self.epsilon_decay = 0.99995
         self.is_eval = is_eval
         tau = 0.001  # Target Network Hyper Parameter
         LRA = 0.0001  # learning rate for Actor Network
@@ -117,7 +118,7 @@ class Agent:
 
     def act(self, state):
         if not self.is_eval and np.random.rand() <= self.epsilon:
-            exploration_noise = np.random.random(self.action_dim)
+            exploration_noise = np.random.normal(loc=0, scale=0.5, size=self.action_dim)
             return np.argmax(self.actor.model.predict(state)[0] + exploration_noise)
         return np.argmax(self.actor.model.predict(state)[0])
 
