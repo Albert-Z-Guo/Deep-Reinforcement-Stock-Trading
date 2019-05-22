@@ -15,7 +15,7 @@ stock_name, window_size, episode_count = sys.argv[1], int(
 stock_prices = stock_close_prices(stock_name)
 l = len(stock_prices) - 1
 
-agent = Agent(state_dim=window_size + 2)
+agent = Agent(state_dim=window_size + 2, initial_funding=10000)
 
 for e in range(1, episode_count + 1):
 	print("Episode " + str(e) + "/" + str(episode_count))
@@ -57,6 +57,6 @@ for e in range(1, episode_count + 1):
 			loss += agent.experience_replay(agent.batch_size, e, t, loss)
 			# print("Episode", e, "Step", t, "Action", action, "Reward", reward, "Loss", loss)
 
-	if e % 50 == 0:
+	if e % 10 == 0:
 		agent.actor.model.save('saved_models/DDPG_ep' + str(e) + '.h5')
 		print('model saved')

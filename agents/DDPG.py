@@ -91,13 +91,14 @@ class CriticNetwork:
 
 
 class Agent:
-    def __init__(self, state_dim, is_eval=False, model_name=""):
+    def __init__(self, state_dim, initial_funding=10000, is_eval=False, model_name=""):
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=1000)
         self.batch_size = 32
+        self.balance = initial_funding
         self.inventory = []
-        self.balance = 1000000
+
         self.gamma = 0.95 # discount factor
         self.epsilon = 1.0 # initial exploration rate
         self.epsilon_min = 0.1 # minimum exploration rate
@@ -106,6 +107,7 @@ class Agent:
         tau = 0.001  # Target Network Hyper Parameter
         LRA = 0.0001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
+        
         # Tensorflow GPU configuration
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
