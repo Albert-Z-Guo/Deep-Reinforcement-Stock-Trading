@@ -130,8 +130,6 @@ class Agent:
         #     mini_batch.append(self.memory[i])
 
         y_batch = []
-        state_batch = []
-        actions_batch = []
         for state, actions, reward, next_state, done in mini_batch:
             if not done:
                 target_q_values = self.critic.target_model.predict([next_state, self.actor.target_model.predict(next_state)])
@@ -139,12 +137,10 @@ class Agent:
             else:
                 y = reward * np.ones((1, self.action_dim))
             y_batch.append(y)
-            state_batch.append(state)
-            actions_batch.append(actions)
 
         y_batch = np.vstack(y_batch)
-        state_batch = np.vstack(state_batch)
-        actions_batch = np.vstack(actions_batch)
+        state_batch = np.vstack([tup[0] for tup in mini_batch])
+        actions_batch = np.vstack([tup[1] for tup in mini_batch])
 
         # update networks
         loss += self.critic.model.train_on_batch([state_batch, actions_batch], y_batch)

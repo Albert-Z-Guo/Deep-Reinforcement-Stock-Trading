@@ -14,19 +14,20 @@ stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 
-agent = Agent(state_dim=window_size+2, initial_funding=10000)
+# agent = Agent(state_dim=window_size+2, initial_funding=10000)
+agent = Agent(state_dim=3, initial_funding=10000)
 
 for e in range(1, episode_count + 1):
 	print('Episode: {}/{}'.format(e, episode_count))
 	total_profit = 0
-	state = generate_ddpg_state(stock_prices, 0, window_size + 1, agent.balance, len(agent.inventory))
+	state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))
 
 	for t in range(trading_period):
 		if t % 100 == 0:
 			print('-------------------Period: {}/{}-------------------'.format(t+1, trading_period))
 		actions = agent.actor.model.predict(state)
 		action = agent.act(state)
-		next_state = generate_ddpg_state(stock_prices, t + 1, window_size + 1, agent.balance, len(agent.inventory))
+		next_state = generate_ddpg_state(stock_prices[t+1], agent.balance, len(agent.inventory))
 		reward = 0
 		loss = 0
 
@@ -64,6 +65,6 @@ for e in range(1, episode_count + 1):
 			loss += agent.experience_replay(agent.batch_size, e, t, loss)
 			print("Episode {:.0f} Step {:.0f} Action {:.0f} Reward {:.2f} Loss {:.2f}".format(e, t, action, reward, loss))
 
-	if e % 1 == 0:
+	if e % 2 == 0:
 		agent.actor.model.save_weights('saved_models/DDPG_actor_ep' + str(e) + '.h5')
 		print('model saved')
