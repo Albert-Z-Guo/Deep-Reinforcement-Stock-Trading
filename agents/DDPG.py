@@ -1,13 +1,17 @@
+import random
 from collections import deque
 
 import numpy as np
 import tensorflow as tf
-from keras.models import Model, Sequential, clone_model
+from keras.models import Model
 from keras.models import load_model
-from keras.layers import Dense, Concatenate, Input, add
-from keras.initializers import VarianceScaling
+from keras.layers import Input, Dense, Concatenate
 from keras import backend as K
 from keras.optimizers import Adam
+
+
+HIDDEN1_UNITS = 256
+HIDDEN2_UNITS = 256
 
 
 class ActorNetwork:
@@ -17,10 +21,10 @@ class ActorNetwork:
         self.tau = tau
         self.learning_rate = learning_rate
         K.set_session(sess)
+        self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
         if is_eval == True:
-            self.model = load_model("saved_models/" + model_name)
+            self.model.load_weights("saved_models/" + model_name)
         else:
-            self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
             self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_size)
             self.action_gradient = tf.placeholder(tf.float32, [None, action_size])
             self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
@@ -38,23 +42,19 @@ class ActorNetwork:
         self.target_model.set_weights(actor_target_weights)
 
     def create_actor_network(self, state_size, action_dim):
-        S = Input(shape=[state_size])
-        h0 = Dense(HIDDEN1_UNITS, activation='relu')(S)
+        states = Input(shape=[state_size])
+        h0 = Dense(HIDDEN1_UNITS, activation='relu')(states)
         h1 = Dense(HIDDEN2_UNITS, activation='relu')(h0)
-        buy = Dense(1, activation='tanh')(h1)
         hold = Dense(1, activation='sigmoid')(h1)
+        buy = Dense(1, activation='sigmoid')(h1)
         sell = Dense(1, activation='sigmoid')(h1)
-        A = Concatenate()([buy, hold, sell])
-        model = Model(inputs=S, outputs=A)
-        return model, model.trainable_weights, S
-
-
-HIDDEN1_UNITS = 300
-HIDDEN2_UNITS = 600
+        actions = Concatenate()([hold, buy, sell])
+        model = Model(inputs=states, outputs=actions)
+        return model, model.trainable_weights, states
 
 
 class CriticNetwork:
-    def __init__(self, sess, state_size, action_size, batch_size, tau, learning_rate):
+    def __init__(self, sess, state_size, action_size, batch_size, tau, learning_rate, is_eval=False, model_name=""):
         self.sess = sess
         self.batch_size = batch_size
         self.tau = tau
@@ -77,37 +77,32 @@ class CriticNetwork:
         self.target_model.set_weights(critic_target_weights)
 
     def create_critic_network(self, state_size, action_dim):
-        S = Input(shape=[state_size])
-        A = Input(shape=[action_dim], name='action2')
-        w1 = Dense(HIDDEN1_UNITS, activation='relu')(S)
-        a1 = Dense(HIDDEN2_UNITS, activation='linear')(A)
-        h1 = Dense(HIDDEN2_UNITS, activation='linear')(w1)
-        h2 = add([h1, a1])
-        h3 = Dense(HIDDEN2_UNITS, activation='relu')(h2)
-        Q = Dense(action_dim, activation='linear')(h3)
-        model = Model(inputs=[S, A], outputs=Q)
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
-        return model, A, S
+        states = Input(shape=[state_size])
+        actions = Input(shape=[action_dim])
+        h0 = Concatenate()([states, actions])
+        h1 = Dense(HIDDEN1_UNITS, activation='relu')(h0)
+        h2 = Dense(HIDDEN2_UNITS, activation='relu')(h1)
+        Q = Dense(action_dim, activation='relu')(h2)
+        model = Model(inputs=[states, actions], outputs=Q)
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=1e-6))
+        return model, actions, states
 
 
 class Agent:
     def __init__(self, state_dim, initial_funding=10000, is_eval=False, model_name=""):
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
-        self.memory = deque(maxlen=1000)
+        self.memory = deque(maxlen=50)
         self.batch_size = 32
         self.balance = initial_funding
         self.inventory = []
 
-        self.gamma = 0.95 # discount factor
-        self.epsilon = 1.0 # initial exploration rate
-        self.epsilon_min = 0.1 # minimum exploration rate
-        self.epsilon_decay = 0.99995
+        self.gamma = 0.9 # discount factor
         self.is_eval = is_eval
         tau = 0.001  # Target Network Hyper Parameter
-        LRA = 0.0001  # learning rate for Actor Network
+        LRA = 0.001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
-        
+
         # Tensorflow GPU configuration
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -119,17 +114,20 @@ class Agent:
     	self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-        if not self.is_eval and np.random.rand() <= self.epsilon:
+        if not self.is_eval:
             exploration_noise = np.random.normal(loc=0, scale=0.5, size=self.action_dim)
             return np.argmax(self.actor.model.predict(state)[0] + exploration_noise)
         return np.argmax(self.actor.model.predict(state)[0])
 
     def experience_replay(self, batch_size, e, t, loss):
+        # retrieve random batch_size long memory from deque
+        mini_batch = random.sample(self.memory, batch_size)
+
         # retrieve recent batch_size long memory from deque
-        mini_batch = []
-        memory_len = len(self.memory)
-        for i in range(memory_len - batch_size + 1, memory_len):
-            mini_batch.append(self.memory[i])
+        # mini_batch = []
+        # memory_len = len(self.memory)
+        # for i in range(memory_len - batch_size + 1, memory_len):
+        #     mini_batch.append(self.memory[i])
 
         y_batch = []
         state_batch = []
@@ -154,7 +152,4 @@ class Agent:
         self.actor.train(state_batch, grads)
         self.actor.target_train()
         self.critic.target_train()
-
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
         return loss
