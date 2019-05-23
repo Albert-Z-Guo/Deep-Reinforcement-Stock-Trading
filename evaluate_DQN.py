@@ -1,5 +1,8 @@
 import sys
 
+import numpy as np
+np.random.seed(1) # for reproducible Keras operations
+
 from keras.models import load_model
 
 from utils import *
@@ -16,15 +19,14 @@ state_dim = model.layers[0].input.shape.as_list()[1]
 
 agent = Agent(state_dim, True, model_name)
 stock_prices = stock_close_prices(stock_name)
-l = len(stock_prices) - 1
+trading_period = len(stock_prices) - 1
 batch_size = 32
 
 total_profit = 0
-agent.inventory = []
 window_size = state_dim
 state = generate_state(stock_prices, 0, window_size + 1)
 
-for t in range(l):
+for t in range(trading_period):
 	action = agent.act(state)
 
 	next_state = generate_state(stock_prices, t + 1, window_size + 1)
@@ -44,7 +46,7 @@ for t in range(l):
 	else:
 		pass # do nothign
 
-	done = True if t == l - 1 else False
+	done = True if t == trading_period - 1 else False
 	agent.remember(state, action, reward, next_state, done)
 	state = next_state
 

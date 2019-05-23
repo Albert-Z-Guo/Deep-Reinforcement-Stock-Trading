@@ -10,7 +10,7 @@ if len(sys.argv) != 4:
 
 stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 stock_prices = stock_close_prices(stock_name)
-l = len(stock_prices) - 1
+trading_period = len(stock_prices) - 1
 batch_size = 32
 
 agent = Agent(window_size)
@@ -22,7 +22,7 @@ for e in range(1, episode_count + 1):
 	total_profit = 0
 	agent.inventory = []
 
-	for t in range(l):
+	for t in range(trading_period):
 		action = agent.act(state)
 		next_state = generate_state(stock_prices, t + 1, window_size + 1)
 		reward = 0
@@ -41,7 +41,7 @@ for e in range(1, episode_count + 1):
 		else:
 			pass # do nothing
 
-		done = True if t == l - 1 else False
+		done = True if t == trading_period - 1 else False
 		if done:
 			print("--------------------------------")
 			print("Total Profit: " + format_price(total_profit))
