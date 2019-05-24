@@ -13,17 +13,18 @@ if len(sys.argv) != 3:
 	print("Usage: python evaluate.py [stock] [model]")
 	exit()
 
-
 stock_name, model_name = sys.argv[1], sys.argv[2]
-agent = Agent(state_dim=3, initial_funding=10000, is_eval=True, model_name=model_name)
-stock_prices = stock_close_prices(stock_name)
-trading_period = len(stock_prices) - 1
-
-display = False
+initial_funding = 50000
 batch_size = 32
 total_profit = 0
 buys = []
 sells = []
+display = False
+
+agent = Agent(state_dim=3, balance=initial_funding, is_eval=True, model_name=model_name)
+stock_prices = stock_close_prices(stock_name)
+trading_period = len(stock_prices) - 1
+
 state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))
 
 for t in range(trading_period):

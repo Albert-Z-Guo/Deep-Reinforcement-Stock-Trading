@@ -14,7 +14,7 @@ if len(sys.argv) != 4:
 stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
-initial_funding = 10000
+initial_funding = 50000
 agent = Agent(state_dim=3, balance=initial_funding)
 
 for e in range(1, episode_count + 1):

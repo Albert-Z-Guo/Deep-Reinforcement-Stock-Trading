@@ -2,7 +2,6 @@ import random
 from collections import deque
 
 import numpy as np
-# np.random.seed(1) # for reproducible Keras operations
 import tensorflow as tf
 from keras.models import Model
 from keras.models import load_model
@@ -38,7 +37,7 @@ class ActorNetwork:
     def train(self, states, action_grads):
         self.sess.run(self.optimize, feed_dict={self.state: states, self.action_gradient: action_grads})
 
-    def target_train(self):
+    def train_target(self):
         actor_weights = self.model.get_weights()
         actor_target_weights = self.target_model.get_weights()
         for i in range(len(actor_weights)):
@@ -73,7 +72,7 @@ class CriticNetwork:
     def gradients(self, states, actions):
         return self.sess.run(self.action_grads, feed_dict={self.state: states, self.action: actions})[0]
 
-    def target_train(self):
+    def train_target(self):
         critic_weights = self.model.get_weights()
         critic_target_weights = self.target_model.get_weights()
         for i in range(len(critic_weights)):
@@ -145,6 +144,6 @@ class Agent:
         loss = self.critic.model.train_on_batch([state_batch, actions_batch], y_batch)
         grads = self.critic.gradients(state_batch, self.actor.model.predict(state_batch))
         self.actor.train(state_batch, grads)
-        self.actor.target_train()
-        self.critic.target_train()
+        self.actor.train_target()
+        self.critic.train_target()
         return loss
