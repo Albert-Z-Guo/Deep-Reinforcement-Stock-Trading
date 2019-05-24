@@ -19,7 +19,7 @@ batch_size = 32
 total_profit = 0
 buys = []
 sells = []
-display = False
+display = True
 
 agent = Agent(state_dim=3, balance=initial_funding, is_eval=True, model_name=model_name)
 stock_prices = stock_close_prices(stock_name)
@@ -70,6 +70,7 @@ if display:
 	sell_prices = [df.iloc[t, 4] for t in sells]
 
 	plt.figure(figsize=(15, 5), dpi=100)
+	plt.title('DDPG Total Profit on {}: ${:.2f}'.format(stock_name, total_profit))
 	plt.plot(df['Date'], df['Close'], color='black', label=stock_name)
 	plt.scatter(buys, buy_prices, c='green', alpha=0.5, label='buy')
 	plt.scatter(sells, sell_prices, c='red', alpha=0.5, label='sell')

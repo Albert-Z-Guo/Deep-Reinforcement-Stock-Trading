@@ -12,7 +12,7 @@ pip3 install -r requirement.txt
 
 To train an agent, e.g. DDPG, run
 ```bash
-python3 train_ddpg.py [stock symbol] [epoch numbers]
+python3 train_ddpg.py [stock symbol] [epoch number]
 ```
 
 To evaluate an agent, e.g. DDPG, run
@@ -21,6 +21,9 @@ python3 evaluate_ddpg.py [stock symbol] [model name]
 ```
 
 where stock symbols can be referred in `data` folder and model names can be referred in `saved_models`.
+
+### Example Results
+![alt_text](./visualizations/DDPG_^GSPC_2016.png)
 
 ### References:
 - [Deep Q-Learning with Keras and Gym](https://keon.io/deep-q-learning/)
