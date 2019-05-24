@@ -74,6 +74,7 @@ if display:
 	plt.scatter(buys, buy_prices, c='green', alpha=0.5, label='buy')
 	plt.scatter(sells, sell_prices, c='red', alpha=0.5, label='sell')
 	plt.xticks(np.linspace(0, len(df), 10))
+	plt.ylabel('Price')
 	plt.legend()
 	plt.grid()
 	plt.show()
