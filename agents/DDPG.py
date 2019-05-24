@@ -93,12 +93,12 @@ class CriticNetwork:
 
 
 class Agent:
-    def __init__(self, state_dim, initial_funding=10000, is_eval=False, model_name=""):
+    def __init__(self, state_dim, balance, is_eval=False, model_name=""):
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.batch_size = 60
-        self.balance = initial_funding
+        self.balance = balance
         self.inventory = []
 
         self.gamma = 0.95 # discount factor
@@ -131,8 +131,8 @@ class Agent:
         y_batch = []
         for state, actions, reward, next_state, done in mini_batch:
             if not done:
-                target_q_values = self.critic.target_model.predict([next_state, self.actor.target_model.predict(next_state)])
-                y = reward + self.gamma * target_q_values
+                target_Q_values = self.critic.target_model.predict([next_state, self.actor.target_model.predict(next_state)])
+                y = reward + self.gamma * target_Q_values
             else:
                 y = reward * np.ones((1, self.action_dim))
             y_batch.append(y)

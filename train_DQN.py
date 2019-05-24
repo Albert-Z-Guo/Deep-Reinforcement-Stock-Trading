@@ -16,13 +16,15 @@ batch_size = 32
 agent = Agent(window_size)
 
 for e in range(1, episode_count + 1):
-	print("Episode " + str(e) + "/" + str(episode_count))
+	print('\nEpisode: {}/{}'.format(e, episode_count))
 	state = generate_state(stock_prices, 0, window_size + 1)
 
 	total_profit = 0
 	agent.inventory = []
 
 	for t in range(trading_period):
+		if t % 100 == 0:
+			print('-------------------Period: {}/{}-------------------'.format(t+1, trading_period))
 		action = agent.act(state)
 		next_state = generate_state(stock_prices, t + 1, window_size + 1)
 		reward = 0
@@ -42,16 +44,16 @@ for e in range(1, episode_count + 1):
 			pass # do nothing
 
 		done = True if t == trading_period - 1 else False
-		if done:
-			print("--------------------------------")
-			print("Total Profit: " + format_price(total_profit))
-			print("--------------------------------")
-
 		agent.remember(state, action, reward, next_state, done)
 		state = next_state
 
 		if len(agent.memory) > batch_size:
 			agent.experience_replay(batch_size)
+
+		if done:
+			print("------------------------------------------")
+			print("Total Profit: " + format_price(total_profit))
+			print("------------------------------------------")
 
 	if e % 50 == 0:
 		agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
