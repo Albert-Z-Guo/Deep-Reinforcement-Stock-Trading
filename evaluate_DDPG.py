@@ -1,10 +1,8 @@
 import sys
 
 import numpy as np
-np.random.seed(1) # for reproducible Keras operations
+np.random.seed(3) # for reproducible Keras operations
 
-import pandas as pd
-from matplotlib import pyplot as plt
 from keras.models import load_model
 
 from utils import *
@@ -17,12 +15,11 @@ if len(sys.argv) != 3:
 
 
 stock_name, model_name = sys.argv[1], sys.argv[2]
-state_dim = 3
-agent = Agent(state_dim=state_dim, initial_funding=10000, is_eval=True, model_name=model_name)
-
+agent = Agent(state_dim=3, initial_funding=10000, is_eval=True, model_name=model_name)
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 
+display = False
 batch_size = 32
 total_profit = 0
 buys = []
@@ -30,9 +27,9 @@ sells = []
 state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))
 
 for t in range(trading_period):
-	actions = agent.actor.model.predict(state)
-	action = agent.act(state)
-	# print(action)
+	actions = agent.act(state, t)
+	action = np.argmax(actions)
+	print(action)
 	next_state = generate_ddpg_state(stock_prices[t+1], agent.balance, len(agent.inventory))
 
 	# buy
@@ -63,15 +60,19 @@ for t in range(trading_period):
 		print(stock_name + " Total Profit: " + format_price(total_profit))
 		print("--------------------------------")
 
-df = pd.read_csv('./data/{}.csv'.format(stock_name))
-buy_prices = [df.iloc[t, 4] for t in buys]
-sell_prices = [df.iloc[t, 4] for t in sells]
+if display:
+	import pandas as pd
+	from matplotlib import pyplot as plt
 
-plt.figure(figsize=(15, 5), dpi=100)
-plt.plot(df['Date'], df['Close'], color='black', label=stock_name)
-plt.scatter(buys, buy_prices, c='green', alpha=0.5, label='buy')
-plt.scatter(sells, sell_prices, c='red', alpha=0.5, label='sell')
-plt.xticks(np.linspace(0, len(df), 10))
-plt.legend()
-plt.grid()
-plt.show()
+	df = pd.read_csv('./data/{}.csv'.format(stock_name))
+	buy_prices = [df.iloc[t, 4] for t in buys]
+	sell_prices = [df.iloc[t, 4] for t in sells]
+
+	plt.figure(figsize=(15, 5), dpi=100)
+	plt.plot(df['Date'], df['Close'], color='black', label=stock_name)
+	plt.scatter(buys, buy_prices, c='green', alpha=0.5, label='buy')
+	plt.scatter(sells, sell_prices, c='red', alpha=0.5, label='sell')
+	plt.xticks(np.linspace(0, len(df), 10))
+	plt.legend()
+	plt.grid()
+	plt.show()

@@ -2,6 +2,7 @@ import random
 from collections import deque
 
 import numpy as np
+# np.random.seed(1) # for reproducible Keras operations
 import tensorflow as tf
 from keras.models import Model
 from keras.models import load_model
@@ -9,9 +10,11 @@ from keras.layers import Input, Dense, Concatenate
 from keras import backend as K
 from keras.optimizers import Adam
 
+from utils import OUNoise
 
-HIDDEN1_UNITS = 256
-HIDDEN2_UNITS = 256
+
+HIDDEN1_UNITS = 24
+HIDDEN2_UNITS = 48
 
 
 class ActorNetwork:
@@ -20,11 +23,12 @@ class ActorNetwork:
         self.batch_size = batch_size
         self.tau = tau
         self.learning_rate = learning_rate
-        K.set_session(sess)
-        self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
         if is_eval == True:
+            self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
             self.model.load_weights("saved_models/" + model_name)
         else:
+            K.set_session(sess)
+            self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
             self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_size)
             self.action_gradient = tf.placeholder(tf.float32, [None, action_size])
             self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
@@ -92,13 +96,14 @@ class Agent:
     def __init__(self, state_dim, initial_funding=10000, is_eval=False, model_name=""):
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
-        self.memory = deque(maxlen=50)
-        self.batch_size = 32
+        self.memory = deque(maxlen=100)
+        self.batch_size = 60
         self.balance = initial_funding
         self.inventory = []
 
-        self.gamma = 0.9 # discount factor
+        self.gamma = 0.95 # discount factor
         self.is_eval = is_eval
+        self.noise = OUNoise(self.action_dim)
         tau = 0.001  # Target Network Hyper Parameter
         LRA = 0.001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
@@ -110,24 +115,18 @@ class Agent:
         self.actor = ActorNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRA, is_eval, model_name)
         self.critic = CriticNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRC)
 
-    def remember(self, state, action, reward, next_state, done):
-    	self.memory.append((state, action, reward, next_state, done))
+    def remember(self, state, actions, reward, next_state, done):
+    	self.memory.append((state, actions, reward, next_state, done))
 
-    def act(self, state):
+    def act(self, state, t):
+        actions = self.actor.model.predict(state)[0]
         if not self.is_eval:
-            exploration_noise = np.random.normal(loc=0, scale=0.5, size=self.action_dim)
-            return np.argmax(self.actor.model.predict(state)[0] + exploration_noise)
-        return np.argmax(self.actor.model.predict(state)[0])
+            return self.noise.get_actions(actions, t)
+        return actions
 
-    def experience_replay(self, batch_size, e, t, loss):
+    def experience_replay(self, batch_size, e, t):
         # retrieve random batch_size long memory from deque
         mini_batch = random.sample(self.memory, batch_size)
-
-        # retrieve recent batch_size long memory from deque
-        # mini_batch = []
-        # memory_len = len(self.memory)
-        # for i in range(memory_len - batch_size + 1, memory_len):
-        #     mini_batch.append(self.memory[i])
 
         y_batch = []
         for state, actions, reward, next_state, done in mini_batch:
@@ -143,7 +142,7 @@ class Agent:
         actions_batch = np.vstack([tup[1] for tup in mini_batch])
 
         # update networks
-        loss += self.critic.model.train_on_batch([state_batch, actions_batch], y_batch)
+        loss = self.critic.model.train_on_batch([state_batch, actions_batch], y_batch)
         grads = self.critic.gradients(state_batch, self.actor.model.predict(state_batch))
         self.actor.train(state_batch, grads)
         self.actor.target_train()
