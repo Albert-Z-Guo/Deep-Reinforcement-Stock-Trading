@@ -6,12 +6,12 @@ from utils import *
 from agents.DDPG import Agent
 
 
-if len(sys.argv) != 4:
-	print("Usage: python train.py [stock] [window] [episodes]")
+if len(sys.argv) != 3:
+	print("Usage: python train.py [stock] [episodes]")
 	exit()
 
 
-stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+stock_name, episode_count = sys.argv[1], int(sys.argv[2])
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 initial_funding = 50000

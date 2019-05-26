@@ -19,7 +19,7 @@ python3 train_DQN.py ^GSPC [window size] [epoch number]
 To evaluate a DDPG or DQN agent, run
 ```bash
 python3 evaluate_DDPG.py [stock symbol] [model name]
-python3 evaluate_DQBN.py [stock symbol] [model name]
+python3 evaluate_DQN.py [stock symbol] [model name]
 ```
 
 where stock symbols can be referred in `data` folder and model names can be referred in `saved_models`.
