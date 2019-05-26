@@ -58,7 +58,7 @@ for t in range(trading_period):
 
 	if done:
 		print("--------------------------------")
-		print(stock_name + " Total Profit: " + format_price(total_profit))
+		print('{} Total Profit: ${:.2f}'.format(stock_name, total_profit))
 		print("--------------------------------")
 
 if display:
