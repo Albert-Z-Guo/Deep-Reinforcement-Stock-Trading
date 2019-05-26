@@ -57,8 +57,12 @@ for t in range(trading_period):
 
 	done = True if t == trading_period - 1 else False
 	if done:
+		portfolio_value = len(agent.inventory)*stock_prices[-1]
+		portfolio_return = portfolio_value + total_profit - initial_funding
 		print("--------------------------------")
-		print(stock_name + " Total Profit: " + format_price(total_profit))
+		print('{} Total Profit: ${:.2f}'.format(stock_name, total_profit))
+		print('Portfolio Value: ${:.2f}'.format(portfolio_value))
+		print('Portfolio Return: ${:.2f}'.format(portfolio_return))
 		print("--------------------------------")
 
 if display:
@@ -70,7 +74,7 @@ if display:
 	sell_prices = [df.iloc[t, 4] for t in sells]
 
 	plt.figure(figsize=(15, 5), dpi=100)
-	plt.title('DDPG Total Profit on {}: ${:.2f}'.format(stock_name, total_profit))
+	plt.title('DDPG Total Return on {}: ${:.2f}'.format(stock_name, portfolio_return))
 	plt.plot(df['Date'], df['Close'], color='black', label=stock_name)
 	plt.scatter(buys, buy_prices, c='green', alpha=0.5, label='buy')
 	plt.scatter(sells, sell_prices, c='red', alpha=0.5, label='sell')
