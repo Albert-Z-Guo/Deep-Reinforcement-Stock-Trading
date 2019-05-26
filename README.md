@@ -2,7 +2,7 @@
 
 This project intends to leverage deep reinforcement learning in portfolio management.
 
-The light-weight reinforcement learning framework is inspired by [Q-Trader](https://github.com/edwardhdlu/q-trader) and the Deep Deterministic Policy Gradient (DDPG) agent structure is adapted from [DDPG-Keras-Torcs](https://github.com/yanpanlau/DDPG-Keras-Torcs).
+The light-weight Deep Q Learning (DQN) is inspired by [Q-Trader](https://github.com/edwardhdlu/q-trader) and the Deep Deterministic Policy Gradient (DDPG) agent structure is adapted from [DDPG-Keras-Torcs](https://github.com/yanpanlau/DDPG-Keras-Torcs).
 
 ### Getting Started
 To install all libraries/dependencies used in this project, run
@@ -10,14 +10,16 @@ To install all libraries/dependencies used in this project, run
 pip3 install -r requirement.txt
 ```
 
-To train an agent, e.g. DDPG, run
+To train a DDPG agent or a DQN agent (with window size included), e.g. over S&P 500 from 2011 to 2019, run
 ```bash
-python3 train_ddpg.py [stock symbol] [epoch number]
+python3 train_DDPG.py ^GSPC [epoch number]
+python3 train_DQN.py ^GSPC [window size] [epoch number]
 ```
 
-To evaluate an agent, e.g. DDPG, run
+To evaluate a DDPG or DQN agent, run
 ```bash
-python3 evaluate_ddpg.py [stock symbol] [model name]
+python3 evaluate_DDPG.py [stock symbol] [model name]
+python3 evaluate_DQBN.py [stock symbol] [model name]
 ```
 
 where stock symbols can be referred in `data` folder and model names can be referred in `saved_models`.
