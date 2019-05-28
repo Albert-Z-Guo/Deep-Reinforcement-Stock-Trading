@@ -47,7 +47,7 @@ for e in range(1, episode_count + 1):
 				agent.balance += stock_prices[t]
 				bought_price = agent.inventory.pop(0)
 				reward = stock_prices[t] - bought_price
-				total_profit += stock_prices[t] - bought_price
+				total_profit += reward
 				print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
 		# hold
 		else:

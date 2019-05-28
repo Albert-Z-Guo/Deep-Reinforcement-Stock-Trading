@@ -36,6 +36,18 @@ def generate_ddpg_state(stock_price, balance, num_holding):
 	return np.array([[stock_price, balance, num_holding]])
 
 
+def daily_risk_free_interest_rate():
+	r_year = 2.75 / 100 # approximate annual U.S. Treasury bond return rate
+	return (1 + r_year)**(1/365) - 1
+
+
+def sharpe_ratio(return_rates):
+	risk_free_rate = daily_risk_free_interest_rate()
+	numerator = np.mean(np.array(return_rates) - risk_free_rate)
+	denominator = np.std(np.array(return_rates) - risk_free_rate)
+	return numerator / denominator
+
+
 # reference: https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
 class OUNoise:
     def __init__(self, action_dim, mu=0.0, theta=0.15, max_sigma=0.3, min_sigma=0.3, decay_period=100000):
