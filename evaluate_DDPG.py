@@ -16,10 +16,10 @@ if len(sys.argv) != 3:
 stock_name, model_name = sys.argv[1], sys.argv[2]
 initial_funding = 50000
 batch_size = 32
-total_profit = 0
 buys = []
 sells = []
 return_rates = []
+portfolio_values = []
 display = True
 
 agent = Agent(state_dim=3, balance=initial_funding, is_eval=True, model_name=model_name)
@@ -33,7 +33,7 @@ for t in range(trading_period):
 	action = np.argmax(actions)
 	print(action)
 	next_state = generate_ddpg_state(stock_prices[t+1], agent.balance, len(agent.inventory))
-	portfolio_value = len(agent.inventory)*stock_prices[-1] + agent.balance
+	portfolio_value = len(agent.inventory)*stock_prices[t+1] + agent.balance
 	profit = 0
 
 	# buy
@@ -49,7 +49,6 @@ for t in range(trading_period):
 			agent.balance += stock_prices[t]
 			bought_price = agent.inventory.pop(0)
 			profit = stock_prices[t] - bought_price
-			total_profit += profit
 			print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
 			sells.append(t)
 	# hold
@@ -58,17 +57,19 @@ for t in range(trading_period):
 		pass # do nothing
 
 	return_rates.append(profit/portfolio_value)
+	portfolio_values.append(len(agent.inventory)*stock_prices[t+1] + agent.balance)
 	state = next_state
 
 	done = True if t == trading_period - 1 else False
 	if done:
-		portfolio_return = portfolio_value + total_profit - initial_funding
+		final_portfolio_value = len(agent.inventory)*stock_prices[t+1] + agent.balance
+		portfolio_return = final_portfolio_value - initial_funding
 		print("--------------------------------")
-		print('{} Total Profit: ${:.2f}'.format(stock_name, total_profit))
-		print('Portfolio Value: ${:.2f}'.format(portfolio_value))
-		print('Portfolio Return: ${:.2f}'.format(portfolio_return))
+		print('Portfolio Value: ${:.2f}'.format(final_portfolio_value))
+		print('{} Return: ${:.2f}'.format(stock_name, portfolio_return))
 		print('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(return_rates)*100))
 		print('Sharpe Ratio {:.3f}'.format(sharpe_ratio(return_rates)))
+		print('Maximum Drawdown {:.3f}%'.format(maximum_drawdown(portfolio_values)*100))
 		print("--------------------------------")
 
 if display:

@@ -36,16 +36,26 @@ def generate_ddpg_state(stock_price, balance, num_holding):
 	return np.array([[stock_price, balance, num_holding]])
 
 
-def daily_risk_free_interest_rate():
+def daily_treasury_bond_return_rate():
 	r_year = 2.75 / 100 # approximate annual U.S. Treasury bond return rate
 	return (1 + r_year)**(1/365) - 1
 
 
+# reference: https://en.wikipedia.org/wiki/Sharpe_ratio
 def sharpe_ratio(return_rates):
-	risk_free_rate = daily_risk_free_interest_rate()
+	'''ex-ante Sharpe ratio'''
+	risk_free_rate = daily_treasury_bond_return_rate()
 	numerator = np.mean(np.array(return_rates) - risk_free_rate)
 	denominator = np.std(np.array(return_rates) - risk_free_rate)
 	return numerator / denominator
+
+
+def maximum_drawdown(portfolio_values):
+	end_index = np.argmax(np.maximum.accumulate(portfolio_values) - portfolio_values)
+	if end_index == 0:
+		return 0
+	beginning_iudex = np.argmax(portfolio_values[:end_index])
+	return (portfolio_values[end_index] - portfolio_values[beginning_iudex]) / portfolio_values[beginning_iudex]
 
 
 # reference: https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
