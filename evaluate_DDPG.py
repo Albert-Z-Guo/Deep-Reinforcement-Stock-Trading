@@ -33,8 +33,7 @@ for t in range(trading_period):
 	action = np.argmax(actions)
 	print(action)
 	next_state = generate_ddpg_state(stock_prices[t+1], agent.balance, len(agent.inventory))
-	portfolio_value = len(agent.inventory)*stock_prices[t+1] + agent.balance
-	profit = 0
+	previous_portfolio_value = len(agent.inventory)*stock_prices[t] + agent.balance
 
 	# buy
 	if action == 1:
@@ -49,23 +48,25 @@ for t in range(trading_period):
 			agent.balance += stock_prices[t]
 			bought_price = agent.inventory.pop(0)
 			profit = stock_prices[t] - bought_price
-			print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
+			print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(profit))
 			sells.append(t)
 	# hold
 	else:
 		# print('Hold')
 		pass # do nothing
 
-	return_rates.append(profit/portfolio_value)
-	portfolio_values.append(len(agent.inventory)*stock_prices[t+1] + agent.balance)
+	current_portfolio_value = len(agent.inventory)*stock_prices[t+1] + agent.balance
+	return_rates.append((current_portfolio_value-previous_portfolio_value)/previous_portfolio_value)
+	portfolio_values.append(current_portfolio_value)
 	state = next_state
 
 	done = True if t == trading_period - 1 else False
 	if done:
-		final_portfolio_value = len(agent.inventory)*stock_prices[t+1] + agent.balance
-		portfolio_return = final_portfolio_value - initial_funding
+		portfolio_return = current_portfolio_value - initial_funding
 		print("--------------------------------")
-		print('Portfolio Value: ${:.2f}'.format(final_portfolio_value))
+		print('Portfolio Value: ${:.2f}'.format(current_portfolio_value))
+		print('Portfolio Balance: ${:.2f}'.format(agent.balance))
+		print('Portfolio Stocks Number: {}'.format(len(agent.inventory)))
 		print('{} Return: ${:.2f}'.format(stock_name, portfolio_return))
 		print('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(return_rates)*100))
 		print('Sharpe Ratio {:.3f}'.format(sharpe_ratio(return_rates)))
