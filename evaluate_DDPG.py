@@ -34,7 +34,7 @@ for t in range(trading_period):
         if agent.balance > stock_prices[t]:
             agent.balance -= stock_prices[t]
             agent.inventory.append(stock_prices[t])
-            print("Buy: {}".format(format_price(stock_prices[t])))
+            print('Buy: ${:.2f}'.format(stock_prices[t]))
             agent.buy_dates.append(t)
     # sell
     elif action == 2:
@@ -42,7 +42,7 @@ for t in range(trading_period):
             agent.balance += stock_prices[t]
             bought_price = agent.inventory.pop(0)
             profit = stock_prices[t] - bought_price
-            print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(profit))
+            print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
             agent.sell_dates.append(t)
     # hold
     else:

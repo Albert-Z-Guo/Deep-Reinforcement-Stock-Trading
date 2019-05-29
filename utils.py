@@ -3,10 +3,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
-def format_price(n):
-    return ("-$" if n < 0 else "$") + "{0:.2f}".format(abs(n))
-
-
 def stock_close_prices(key):
     '''return a list containing stock close prices from a .csv file'''
     prices = []

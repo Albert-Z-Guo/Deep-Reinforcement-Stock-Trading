@@ -41,14 +41,15 @@ for e in range(1, episode_count + 1):
 			if agent.balance > stock_prices[t]:
 				agent.balance -= stock_prices[t]
 				agent.inventory.append(stock_prices[t])
-				print("Buy: " + format_price(stock_prices[t]))
+				print('Buy: ${:.2f}'.format(stock_prices[t]))
 		# sell
 		elif action == 2:
 			if len(agent.inventory) > 0:
 				agent.balance += stock_prices[t]
 				bought_price = agent.inventory.pop(0)
-				reward = max(stock_prices[t] - bought_price, 0)
-				print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
+				profit = stock_prices[t] - bought_price
+				reward = max(profit, 0)
+				print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
 		# hold
 		else:
 			pass # do nothing
