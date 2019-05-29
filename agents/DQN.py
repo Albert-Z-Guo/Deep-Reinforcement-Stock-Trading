@@ -9,11 +9,19 @@ from keras.optimizers import Adam
 
 
 class Agent:
-	def __init__(self, state_size, is_eval=False, model_name=""):
+	def __init__(self, state_size, balance=50000, is_eval=False, model_name=""):
+		self.model_type = 'DQN'
 		self.state_size = state_size # normalized previous days
 		self.action_space = 3 # hold, buy, sell
 		self.memory = deque(maxlen=1000)
+		self.initial_portfolio_value = balance
+		self.balance = balance
 		self.inventory = []
+		self.return_rates = []
+		self.portfolio_values = []
+		self.buy_dates = []
+		self.sell_dates = []
+		
 		self.gamma = 0.95
 		self.epsilon = 1.0 # initial exploration rate
 		self.epsilon_min = 0.01 # minimum exploration rate

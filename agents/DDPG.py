@@ -93,12 +93,18 @@ class CriticNetwork:
 
 class Agent:
     def __init__(self, state_dim, balance, is_eval=False, model_name=""):
+        self.model_type = 'DDPG'
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.batch_size = 60
+        self.initial_portfolio_value = balance
         self.balance = balance
         self.inventory = []
+        self.return_rates = []
+        self.portfolio_values = []
+        self.buy_dates = []
+        self.sell_dates = []
 
         self.gamma = 0.95 # discount factor
         self.is_eval = is_eval

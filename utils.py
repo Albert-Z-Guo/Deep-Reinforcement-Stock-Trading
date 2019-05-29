@@ -1,5 +1,6 @@
 import numpy as np
-
+import pandas as pd
+from matplotlib import pyplot as plt
 
 def format_price(n):
 	return ("-$" if n < 0 else "$") + "{0:.2f}".format(abs(n))
@@ -56,6 +57,37 @@ def maximum_drawdown(portfolio_values):
 		return 0
 	beginning_iudex = np.argmax(portfolio_values[:end_index])
 	return (portfolio_values[end_index] - portfolio_values[beginning_iudex]) / portfolio_values[beginning_iudex]
+
+
+def evaluate_portfolio_performance(agent):
+	current_portfolio_value = agent.portfolio_values[-1]
+	portfolio_return = current_portfolio_value - agent.initial_portfolio_value
+	print("--------------------------------")
+	print('Portfolio Value: ${:.2f}'.format(current_portfolio_value))
+	print('Portfolio Balance: ${:.2f}'.format(agent.balance))
+	print('Portfolio Stocks Number: {}'.format(len(agent.inventory)))
+	print('Total Return: ${:.2f}'.format(portfolio_return))
+	print('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(agent.return_rates)*100))
+	print('Sharpe Ratio {:.3f}'.format(sharpe_ratio(agent.return_rates)))
+	print('Maximum Drawdown {:.3f}%'.format(maximum_drawdown(agent.portfolio_values)*100))
+	print("--------------------------------")
+	return portfolio_return
+
+
+def plot_portfolio_transaction_history(stock_name, agent, portfolio_return):
+	df = pd.read_csv('./data/{}.csv'.format(stock_name))
+	buy_prices = [df.iloc[t, 4] for t in agent.buy_dates]
+	sell_prices = [df.iloc[t, 4] for t in agent.sell_dates]
+	plt.figure(figsize=(15, 5), dpi=100)
+	plt.title('{} Total Return on {}: ${:.2f}'.format(agent.model_type, stock_name, portfolio_return))
+	plt.plot(df['Date'], df['Close'], color='black', label=stock_name)
+	plt.scatter(agent.buy_dates, buy_prices, c='green', alpha=0.5, label='buy')
+	plt.scatter(agent.sell_dates, sell_prices, c='red', alpha=0.5, label='sell')
+	plt.xticks(np.linspace(0, len(df), 10))
+	plt.ylabel('Price')
+	plt.legend()
+	plt.grid()
+	plt.show()
 
 
 # reference: https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py

@@ -12,8 +12,9 @@ stock_name, window_size, episode_count = sys.argv[1], int(sys.argv[2]), int(sys.
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 batch_size = 32
+initial_funding = 50000
 
-agent = Agent(window_size)
+agent = Agent(window_size, balance=initial_funding)
 
 for e in range(1, episode_count + 1):
 	print('\nEpisode: {}/{}'.format(e, episode_count))
@@ -31,14 +32,18 @@ for e in range(1, episode_count + 1):
 
 		# buy
 		if action == 1:
-			agent.inventory.append(stock_prices[t])
-			print("Buy: " + format_price(stock_prices[t]))
+			if agent.balance > stock_prices[t]:
+				agent.balance -= stock_prices[t]
+				agent.inventory.append(stock_prices[t])
+				print("Buy: " + format_price(stock_prices[t]))
 		# sell
-		elif action == 2 and len(agent.inventory) > 0:
-			bought_price = agent.inventory.pop(0)
-			reward = max(stock_prices[t] - bought_price, 0)
-			total_profit += stock_prices[t] - bought_price
-			print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
+		elif action == 2:
+			if len(agent.inventory) > 0:
+				agent.balance += stock_prices[t]
+				bought_price = agent.inventory.pop(0)
+				reward = max(stock_prices[t] - bought_price, 0)
+				total_profit += stock_prices[t] - bought_price
+				print("Sell: " + format_price(stock_prices[t]) + " | Profit: " + format_price(stock_prices[t] - bought_price))
 		# hold
 		else:
 			pass # do nothing
@@ -55,6 +60,6 @@ for e in range(1, episode_count + 1):
 			print("Total Profit: " + format_price(total_profit))
 			print("------------------------------------------")
 
-	if e % 50 == 0:
+	if e % 1 == 0:
 		agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
 		print('model saved')
