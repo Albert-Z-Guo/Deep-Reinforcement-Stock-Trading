@@ -60,6 +60,6 @@ for e in range(1, episode_count + 1):
 			print("Total Profit: " + format_price(total_profit))
 			print("------------------------------------------")
 
-	if e % 1 == 0:
+	if e % 10 == 0:
 		agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
 		print('model saved')
