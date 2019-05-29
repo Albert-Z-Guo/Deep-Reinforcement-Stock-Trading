@@ -3,6 +3,10 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
 def stock_close_prices(key):
     '''return a list containing stock close prices from a .csv file'''
     prices = []
@@ -10,10 +14,6 @@ def stock_close_prices(key):
     for line in lines[1:]:
         prices.append(float(line.split(",")[4]))
     return prices
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
 
 
 def generate_state(stock_prices, t, n):
@@ -104,13 +104,11 @@ class OUNoise:
 
     def evolve_state(self):
         x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * \
-            np.random.randn(self.action_dim)
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
         self.state = x + dx
         return self.state
 
     def get_actions(self, actions, t=0):
         ou_state = self.evolve_state()
-        self.sigma = self.max_sigma - \
-            (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
+        self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
         return np.clip(actions + ou_state, 0, 1)
