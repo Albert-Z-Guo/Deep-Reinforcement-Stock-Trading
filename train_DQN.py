@@ -48,17 +48,15 @@ for e in range(1, episode_count + 1):
         previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
         # buy
-        if action == 1:
-            if agent.balance > stock_prices[t]: buy()
-            else:
-                next_action = np.argsort(actions)[1]  # second predicted action
-                if next_action == 2: sell()
+        if action == 1 and agent.balance > stock_prices[t]: buy()
+        else:
+            next_action = np.argsort(actions)[1]  # second predicted action
+            if next_action == 2 and len(agent.inventory) > 0: sell()
         # sell
-        if action == 2:
-            if len(agent.inventory) > 0: sell()
-            else:
-                next_action = np.argsort(actions)[1]
-                if next_action == 1: buy()
+        if action == 2 and len(agent.inventory) > 0: sell()
+        else:
+            next_action = np.argsort(actions)[1]
+            if next_action == 1: buy()
         # hold
 
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance

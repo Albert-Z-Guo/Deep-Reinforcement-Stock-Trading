@@ -51,19 +51,17 @@ for e in range(1, episode_count + 1):
 		next_state = generate_ddpg_state(stock_prices[t], agent.balance, len(agent.inventory))
 		previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-        # buy
-		if action == 1:
-			if agent.balance > stock_prices[t]: buy()
-			else:
-				next_action = np.argsort(actions)[1]  # second predicted action
-				if next_action == 2: sell()
-        # sell
-		if action == 2:
-			if len(agent.inventory) > 0: sell()
-			else:
-				next_action = np.argsort(actions)[1]
-				if next_action == 1: buy()
-        # hold
+		# buy
+		if action == 1 and agent.balance > stock_prices[t]: buy()
+		else:
+			next_action = np.argsort(actions)[1]  # second predicted action
+			if next_action == 2 and len(agent.inventory) > 0: sell()
+		# sell
+		if action == 2 and len(agent.inventory) > 0: sell()
+		else:
+			next_action = np.argsort(actions)[1]
+			if next_action == 1: buy()
+	    # hold
 
 		current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 		agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
