@@ -90,18 +90,28 @@ def plot_portfolio_transaction_history(stock_name, agent):
 	plt.show()
 
 
-def plot_portfolio_value_comparison(stock_name, agent):
+def buy_and_hold_benchmark(stock_name, agent):
 	df = pd.read_csv('./data/{}.csv'.format(stock_name))
+	dates = df['Date']
 	num_holding = agent.initial_portfolio_value // df.iloc[0, 4]
 	balance_left = agent.initial_portfolio_value % df.iloc[0, 4]
 	buy_and_hold_portfolio_values = df['Close']*num_holding + balance_left
 	buy_and_hold_return = buy_and_hold_portfolio_values.iloc[-1] - agent.initial_portfolio_value
+	return dates, buy_and_hold_portfolio_values, buy_and_hold_return
+
+
+def plot_portfolio_value_comparison(stock_name, agent):
+	dates, buy_and_hold_portfolio_values, buy_and_hold_return = buy_and_hold_benchmark(stock_name, agent)
 	agent_return = agent.portfolio_values[-1] - agent.initial_portfolio_value
 	plt.figure(figsize=(15, 5), dpi=100)
-	plt.title('{} vs Buy and Hold'.format(agent.model_type))
-	plt.plot(df['Date'], agent.portfolio_values, color='green', label='DDPG Total Return ${:.2f}'.format(agent_return))
-	plt.plot(df['Date'], buy_and_hold_portfolio_values, color='blue', label='Buy and Hold Total Return ${:.2f}'.format(buy_and_hold_return))
-	plt.xticks(np.linspace(0, len(df), 10))
+	plt.title('{} vs. Buy and Hold'.format(agent.model_type))
+	plt.plot(dates, agent.portfolio_values, color='green', label='{} Total Return ${:.2f}'.format(agent.model_type, agent_return))
+	plt.plot(dates, buy_and_hold_portfolio_values, color='blue', label='Buy and Hold Total Return ${:.2f}'.format(buy_and_hold_return))
+	# compare with S&P 500 2018
+	if '^GSPC' not in stock_name:
+		dates, GSPC_buy_and_hold_portfolio_values, GSPC_buy_and_hold_return = buy_and_hold_benchmark('^GSPC_2018', agent)
+		plt.plot(dates, GSPC_buy_and_hold_portfolio_values, color='red', label='S&P 500 2018 Buy and Hold Total Return ${:.2f}'.format(GSPC_buy_and_hold_return))
+	plt.xticks(np.linspace(0, len(dates), 10))
 	plt.ylabel('Dollars')
 	plt.legend()
 	plt.grid()
