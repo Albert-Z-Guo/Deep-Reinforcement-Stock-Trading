@@ -2,7 +2,15 @@
 
 This project intends to leverage deep reinforcement learning in portfolio management.
 
-The light-weight Deep Q-network (DQN) is inspired by [Q-Trader](https://github.com/edwardhdlu/q-trader) and the Deep Deterministic Policy Gradient (DDPG) agent structure is adapted from [DDPG-Keras-Torcs](https://github.com/yanpanlau/DDPG-Keras-Torcs). The visualization part is built from scratch.
+The light-weight Deep Q-network (DQN) is inspired by [Q-Trader](https://github.com/edwardhdlu/q-trader) and the Deep Deterministic Policy Gradient (DDPG) agent structure is adapted from [DDPG-Keras-Torcs](https://github.com/yanpanlau/DDPG-Keras-Torcs) with deep integration. Evaluation metrics and visualizations are built from scratch.
+
+Key assumptions and limitations of the current frameworks:
+- trading has no impact on the market
+- only single stock type is supported
+- only 3 actions: buy, hold, sell
+- the agent performs only 1 action for portfolio reallocation at the end of each trade day
+- all reallocations can be finished at the closing prices
+- no missing data in price history
 
 ### Getting Started
 To install all libraries/dependencies used in this project, run
