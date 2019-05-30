@@ -38,7 +38,7 @@ def sell(t):
     bought_price = agent.inventory.pop(0)
     profit = stock_prices[t] - bought_price
     global reward
-    reward = max(profit, 0)
+    reward = profit
     agent.sell_dates.append(t)
     print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
 
