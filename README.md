@@ -18,10 +18,10 @@ To install all libraries/dependencies used in this project, run
 pip3 install -r requirement.txt
 ```
 
-To train a DDPG agent or a DQN agent (with window size included), e.g. over S&P 500 from 2011 to 2019, run
+To train a DDPG agent or a DQN agent (with window size included), e.g. over S&P 500 from 2010 to 2015, run
 ```bash
-python3 train_DDPG.py ^GSPC [epoch number]
-python3 train_DQN.py ^GSPC [window size] [epoch number]
+python3 train_DDPG.py ^GSPC_2010-2015 [epoch number]
+python3 train_DQN.py ^GSPC_2010-2015 [window size] [epoch number]
 ```
 
 To evaluate a DDPG or DQN agent, run
