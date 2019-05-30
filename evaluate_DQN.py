@@ -46,7 +46,8 @@ for t in range(trading_period):
             agent.balance += stock_prices[t]
             bought_price = agent.inventory.pop(0)
             profit = stock_prices[t] - bought_price
-            print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+            print('Sell: ${:.2f} | Profit: ${:.2f}'.format(
+                stock_prices[t], profit))
             agent.sell_dates.append(t)
     # hold
     else:
@@ -62,4 +63,5 @@ for t in range(trading_period):
         portfolio_return = evaluate_portfolio_performance(agent)
 
 if display:
-    plot_portfolio_transaction_history(stock_name, agent, portfolio_return)
+    plot_portfolio_transaction_history(stock_name, agent)
+    plot_portfolio_value_comparison(stock_name, agent)

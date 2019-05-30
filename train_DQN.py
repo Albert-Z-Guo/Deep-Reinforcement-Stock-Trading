@@ -18,19 +18,20 @@ agent = Agent(window_size, balance=initial_funding)
 
 for e in range(1, episode_count + 1):
     print('\nEpisode: {}/{}'.format(e, episode_count))
-    state = generate_state(stock_prices, 0, window_size + 1)
 
     agent.balance = initial_funding
     total_profit = 0
     agent.inventory = []
 
-    for t in range(trading_period):
+    state = generate_state(stock_prices, 0, window_size + 1)
+
+    for t in range(1, trading_period + 1):
         if t % 100 == 0:
-            print('-------------------Period: {}/{}-------------------'.format(t + 1, trading_period))
+            print('-------------------Period: {}/{}-------------------'.format(t, trading_period))
         reward = 0
         action = agent.act(state)
 
-        next_state = generate_state(stock_prices, t + 1, window_size + 1)
+        next_state = generate_state(stock_prices, t, window_size + 1)
         previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
         # buy
@@ -46,16 +47,17 @@ for e in range(1, episode_count + 1):
                 bought_price = agent.inventory.pop(0)
                 profit = stock_prices[t] - bought_price
                 reward = max(profit, 0)
-                print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+                print('Sell: ${:.2f} | Profit: ${:.2f}'.format(
+                    stock_prices[t], profit))
         # hold
         else:
             pass  # do nothing
 
-            current_portfolio_value = len(agent.inventory) * stock_prices[t + 1] + agent.balance
+            current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
             agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
             agent.portfolio_values.append(current_portfolio_value)
 
-        done = True if t == trading_period - 1 else False
+        done = True if t == trading_period else False
         agent.remember(state, action, reward, next_state, done)
         state = next_state
 

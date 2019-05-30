@@ -18,7 +18,7 @@ class Agent:
         self.balance = balance
         self.inventory = []
         self.return_rates = []
-        self.portfolio_values = []
+        self.portfolio_values = [balance]
         self.buy_dates = []
         self.sell_dates = []
 

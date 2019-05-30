@@ -23,18 +23,17 @@ for e in range(1, episode_count + 1):
     agent.inventory = []
     agent.noise.reset()
 
-    state = generate_ddpg_state(
-        stock_prices[0], agent.balance, len(agent.inventory))
+    state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))
 
-    for t in range(trading_period):
+    for t in range(1, trading_period + 1):
         if t % 100 == 0:
-            print('-------------------Period: {}/{}-------------------'.format(t + 1, trading_period))
+            print('-------------------Period: {}/{}-------------------'.format(t, trading_period))
 
         reward = 0
         actions = agent.act(state, t)
         action = np.argmax(actions)
 
-        next_state = generate_ddpg_state(stock_prices[t + 1], agent.balance, len(agent.inventory))
+        next_state = generate_ddpg_state(stock_prices[t], agent.balance, len(agent.inventory))
         previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
         # buy
@@ -55,11 +54,11 @@ for e in range(1, episode_count + 1):
         else:
             pass  # do nothing
 
-        current_portfolio_value = len(agent.inventory) * stock_prices[t + 1] + agent.balance
+        current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
         agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
         agent.portfolio_values.append(current_portfolio_value)
 
-        done = True if t == trading_period - 1 else False
+        done = True if t == trading_period else False
         agent.remember(state, actions, reward, next_state, done)
         state = next_state
 

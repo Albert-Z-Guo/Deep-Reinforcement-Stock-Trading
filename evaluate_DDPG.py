@@ -59,4 +59,5 @@ for t in range(trading_period):
         portfolio_return = evaluate_portfolio_performance(agent)
 
 if display:
-    plot_portfolio_transaction_history(stock_name, agent, portfolio_return)
+	plot_portfolio_transaction_history(stock_name, agent)
+	plot_portfolio_value_comparison(stock_name, agent)
