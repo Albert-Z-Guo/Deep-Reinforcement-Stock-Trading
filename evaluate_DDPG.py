@@ -22,6 +22,21 @@ trading_period = len(stock_prices) - 1
 
 state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))
 
+def buy(t):
+    agent.balance -= stock_prices[t]
+    agent.inventory.append(stock_prices[t])
+    agent.buy_dates.append(t)
+    print('Buy: ${:.2f}'.format(stock_prices[t]))
+
+def sell(t):
+    agent.balance += stock_prices[t]
+    bought_price = agent.inventory.pop(0)
+    profit = stock_prices[t] - bought_price
+	global reward
+    reward = max(profit, 0)
+    agent.sell_dates.append(t)
+    print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+
 for t in range(trading_period):
     actions = agent.act(state, t)
     action = np.argmax(actions)
@@ -29,25 +44,20 @@ for t in range(trading_period):
     next_state = generate_ddpg_state(stock_prices[t + 1], agent.balance, len(agent.inventory))
     previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-    # buy
+	# buy
     if action == 1:
-        if agent.balance > stock_prices[t]:
-            agent.balance -= stock_prices[t]
-            agent.inventory.append(stock_prices[t])
-            print('Buy: ${:.2f}'.format(stock_prices[t]))
-            agent.buy_dates.append(t)
-    # sell
-    elif action == 2:
-        if len(agent.inventory) > 0:
-            agent.balance += stock_prices[t]
-            bought_price = agent.inventory.pop(0)
-            profit = stock_prices[t] - bought_price
-            print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
-            agent.sell_dates.append(t)
-    # hold
+        if agent.balance > stock_prices[t]: buy(t)
     else:
-        # print('Hold')
-        pass  # do nothing
+        next_action = np.argsort(actions)[1]  # second predicted action
+        if next_action == 2: sell(t)
+	# sell
+    if action == 2:
+        if len(agent.inventory) > 0:
+            sell(t)
+        else:
+            next_action = np.argsort(actions)[1]
+            if next_action == 1: buy(t)
+    # hold
 
     current_portfolio_value = len(agent.inventory) * stock_prices[t + 1] + agent.balance
     agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
@@ -59,5 +69,5 @@ for t in range(trading_period):
         portfolio_return = evaluate_portfolio_performance(agent)
 
 if display:
-	plot_portfolio_transaction_history(stock_name, agent)
-	plot_portfolio_value_comparison(stock_name, agent)
+    plot_portfolio_transaction_history(stock_name, agent)
+    plot_portfolio_value_comparison(stock_name, agent)

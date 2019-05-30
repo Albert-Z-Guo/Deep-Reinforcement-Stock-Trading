@@ -1,7 +1,7 @@
 import sys
 
 import numpy as np
-# np.random.seed(3) # for reproducible Keras operations
+np.random.seed(3) # for reproducible Keras operations
 
 from keras.models import load_model
 
@@ -27,31 +27,41 @@ display = True
 window_size = state_dim
 state = generate_state(stock_prices, 0, window_size + 1)
 
+def buy(t):
+    agent.balance -= stock_prices[t]
+    agent.inventory.append(stock_prices[t])
+    agent.buy_dates.append(t)
+    print('Buy: ${:.2f}'.format(stock_prices[t]))
+
+def sell(t):
+    agent.balance += stock_prices[t]
+    bought_price = agent.inventory.pop(0)
+    profit = stock_prices[t] - bought_price
+	global reward
+    reward = max(profit, 0)
+    agent.sell_dates.append(t)
+    print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+
 for t in range(trading_period):
+    actions = agent.model.predict(state)[0]
     action = agent.act(state)
     print(action)
     next_state = generate_state(stock_prices, t + 1, window_size + 1)
     previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-    # buy
+	# buy
     if action == 1:
-        if agent.balance > stock_prices[t]:
-            agent.balance -= stock_prices[t]
-            agent.inventory.append(stock_prices[t])
-            print('Buy: ${:.2f}'.format(stock_prices[t]))
-            agent.buy_dates.append(t)
-    # sell
-    elif action == 2:
-        if len(agent.inventory) > 0:
-            agent.balance += stock_prices[t]
-            bought_price = agent.inventory.pop(0)
-            profit = stock_prices[t] - bought_price
-            print('Sell: ${:.2f} | Profit: ${:.2f}'.format(
-                stock_prices[t], profit))
-            agent.sell_dates.append(t)
-    # hold
+        if agent.balance > stock_prices[t]: buy(t)
     else:
-        pass  # do nothign
+        next_action = np.argsort(actions)[1]  # second predicted action
+        if next_action == 2: sell(t)
+	# sell
+    if action == 2:
+        if len(agent.inventory) > 0: sell(t)
+        else:
+            next_action = np.argsort(actions)[1]
+            if next_action == 1: buy(t)
+    # hold
 
     current_portfolio_value = len(agent.inventory) * stock_prices[t + 1] + agent.balance
     agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
