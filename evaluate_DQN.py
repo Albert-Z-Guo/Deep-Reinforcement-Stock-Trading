@@ -1,12 +1,10 @@
+from agents.DQN import Agent
+from utils import *
+from keras.models import load_model
 import sys
 
 import numpy as np
-np.random.seed(3) # for reproducible Keras operations
-
-from keras.models import load_model
-
-from utils import *
-from agents.DQN import Agent
+np.random.seed(3)  # for reproducible Keras operations
 
 
 if len(sys.argv) != 3:
@@ -27,11 +25,13 @@ display = True
 window_size = state_dim
 state = generate_state(stock_prices, 0, window_size + 1)
 
+
 def buy(t):
     agent.balance -= stock_prices[t]
     agent.inventory.append(stock_prices[t])
     agent.buy_dates.append(t)
     print('Buy: ${:.2f}'.format(stock_prices[t]))
+
 
 def sell(t):
     agent.balance += stock_prices[t]
@@ -42,6 +42,7 @@ def sell(t):
     agent.sell_dates.append(t)
     print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
 
+
 for t in range(trading_period):
     actions = agent.model.predict(state)[0]
     action = agent.act(state)
@@ -49,12 +50,12 @@ for t in range(trading_period):
     next_state = generate_state(stock_prices, t + 1, window_size + 1)
     previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-	# buy
+    # buy
     if action == 1 and agent.balance > stock_prices[t]: buy(t)
     else:
         next_action = np.argsort(actions)[1]  # second predicted action
         if next_action == 2 and len(agent.inventory) > 0: sell(t)
-	# sell
+    # sell
     if action == 2 and len(agent.inventory) > 0: sell(t)
     else:
         next_action = np.argsort(actions)[1]
