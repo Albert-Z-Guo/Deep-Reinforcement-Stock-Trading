@@ -2,6 +2,7 @@ import random
 from collections import deque
 
 import numpy as np
+np.random.seed(3)  # for reproducible Keras operations
 import tensorflow as tf
 from keras.models import Model
 from keras.models import load_model

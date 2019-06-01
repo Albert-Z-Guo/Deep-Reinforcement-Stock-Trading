@@ -1,10 +1,10 @@
-from agents.DDPG import Agent
-from utils import *
-from keras.models import load_model
 import sys
 
 import numpy as np
-np.random.seed(3)  # for reproducible Keras operations
+from keras.models import load_model
+
+from utils import *
+from agents.DDPG import Agent
 
 
 if len(sys.argv) != 3:

@@ -152,4 +152,5 @@ def plot_portfolio_returns_across_episodes(returns_across_episodes):
     plt.xlabel('Episode')
     plt.ylabel('Portfolio Value')
     plt.grid()
+    plt.savefig('returns_across_episodes.png')
     plt.show()
