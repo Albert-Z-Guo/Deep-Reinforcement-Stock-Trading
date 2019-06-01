@@ -74,4 +74,4 @@ for t in range(trading_period):
 
 if display:
     plot_portfolio_transaction_history(stock_name, agent)
-    plot_portfolio_value_comparison(stock_name, agent)
+    plot_portfolio_performance_comparison(stock_name, agent)

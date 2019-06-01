@@ -15,6 +15,7 @@ batch_size = 32
 initial_funding = 50000
 
 agent = Agent(window_size, balance=initial_funding)
+returns_across_episodes  = []
 
 def buy():
 	agent.balance -= stock_prices[t]
@@ -33,8 +34,9 @@ for e in range(1, episode_count + 1):
     print('\nEpisode: {}/{}'.format(e, episode_count))
 
     agent.balance = initial_funding
-    total_profit = 0
     agent.inventory = []
+    agent.return_rates = []
+    agent.portfolio_values = [balance]
     state = generate_state(stock_prices, 0, window_size + 1)
 
     for t in range(1, trading_period + 1):
@@ -71,8 +73,11 @@ for e in range(1, episode_count + 1):
             agent.experience_replay(batch_size)
 
         if done:
-            evaluate_portfolio_performance(agent)
+            portfolio_return = evaluate_portfolio_performance(agent)
+            returns_across_episodes.append(portfolio_return)
 
     if e % 10 == 0:
         agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
         print('model saved')
+
+plot_portfolio_returns_across_episodes(returns_across_episodes)

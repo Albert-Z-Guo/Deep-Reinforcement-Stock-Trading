@@ -3,6 +3,33 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
+# reference: https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
+class OUNoise:
+    def __init__(self, action_dim, mu=0.0, theta=0.15, max_sigma=0.3, min_sigma=0.3, decay_period=100000):
+        self.mu = mu
+        self.theta = theta
+        self.sigma = max_sigma
+        self.max_sigma = max_sigma
+        self.min_sigma = min_sigma
+        self.decay_period = decay_period
+        self.action_dim = action_dim
+        self.reset()
+
+    def reset(self):
+        self.state = np.ones(self.action_dim) * self.mu
+
+    def evolve_state(self):
+        x = self.state
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
+        self.state = x + dx
+        return self.state
+
+    def get_actions(self, actions, t=0):
+        ou_state = self.evolve_state()
+        self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
+        return np.clip(actions + ou_state, 0, 1)
+
+
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -100,7 +127,7 @@ def buy_and_hold_benchmark(stock_name, agent):
 	return dates, buy_and_hold_portfolio_values, buy_and_hold_return
 
 
-def plot_portfolio_value_comparison(stock_name, agent):
+def plot_portfolio_performance_comparison(stock_name, agent):
 	dates, buy_and_hold_portfolio_values, buy_and_hold_return = buy_and_hold_benchmark(stock_name, agent)
 	agent_return = agent.portfolio_values[-1] - agent.initial_portfolio_value
 	plt.figure(figsize=(15, 5), dpi=100)
@@ -118,28 +145,11 @@ def plot_portfolio_value_comparison(stock_name, agent):
 	plt.show()
 
 
-# reference: https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
-class OUNoise:
-    def __init__(self, action_dim, mu=0.0, theta=0.15, max_sigma=0.3, min_sigma=0.3, decay_period=100000):
-        self.mu = mu
-        self.theta = theta
-        self.sigma = max_sigma
-        self.max_sigma = max_sigma
-        self.min_sigma = min_sigma
-        self.decay_period = decay_period
-        self.action_dim = action_dim
-        self.reset()
-
-    def reset(self):
-        self.state = np.ones(self.action_dim) * self.mu
-
-    def evolve_state(self):
-        x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
-        self.state = x + dx
-        return self.state
-
-    def get_actions(self, actions, t=0):
-        ou_state = self.evolve_state()
-        self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
-        return np.clip(actions + ou_state, 0, 1)
+def plot_portfolio_returns_across_episodes(returns_across_episodes):
+    plt.figure(figsize=(15, 5), dpi=100)
+    plt.title('Portfolio Returns')
+    plt.plot(returns_across_episodes, color='black')
+    plt.xlabel('Episode')
+    plt.ylabel('Portfolio Value')
+    plt.grid()
+    plt.show()
