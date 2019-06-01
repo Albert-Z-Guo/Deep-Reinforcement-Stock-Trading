@@ -37,7 +37,7 @@ for e in range(1, episode_count + 1):
     agent.balance = initial_funding
     agent.inventory = []
     agent.return_rates = []
-    agent.portfolio_values = [balance]
+    agent.portfolio_values = [initial_funding]
     agent.noise.reset()
 
     state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))

@@ -36,7 +36,7 @@ for e in range(1, episode_count + 1):
     agent.balance = initial_funding
     agent.inventory = []
     agent.return_rates = []
-    agent.portfolio_values = [balance]
+    agent.portfolio_values = [initial_funding]
     state = generate_state(stock_prices, 0, window_size + 1)
 
     for t in range(1, trading_period + 1):
