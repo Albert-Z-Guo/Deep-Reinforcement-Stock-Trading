@@ -56,7 +56,7 @@ for e in range(1, episode_count + 1):
 		# buy
         if action == 1 and agent.balance > stock_prices[t]: buy()
         else:
-            reward -= stock_prices[t] # missing opportunity
+            reward -= stock_prices[t] * 0.05 # missing opportunity
             # next_action = np.argsort(actions)[1]  # second predicted action
             # if next_action == 2 and len(agent.inventory) > 0: sell()
         # sell
