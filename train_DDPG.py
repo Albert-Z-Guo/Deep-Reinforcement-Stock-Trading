@@ -56,16 +56,20 @@ for e in range(1, episode_count + 1):
 		# buy
         if action == 1 and agent.balance > stock_prices[t]: buy()
         else:
-            reward -= stock_prices[t]*0.1 # missing opportunity
+            reward -= stock_prices[t] # missing opportunity
             # next_action = np.argsort(actions)[1]  # second predicted action
             # if next_action == 2 and len(agent.inventory) > 0: sell()
         # sell
         if action == 2 and len(agent.inventory) > 0: sell()
-        else:
-            reward -= stock_prices[t]*0.1 # missing opportunity
-            # next_action = np.argsort(actions)[1]
-            # if next_action == 1: buy()
+        # else:
+        #     reward -= stock_prices[t] # missing opportunity
+        #     next_action = np.argsort(actions)[1]
+        #     if next_action == 1: buy()
 	    # hold
+        if action == 0:
+            next_action = np.argsort(actions)[1]
+            if next_action == 1: buy() # encourage action
+            if next_action == 2: pass
 
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
         agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
