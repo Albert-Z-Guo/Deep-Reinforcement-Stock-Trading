@@ -34,6 +34,10 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
+def softmax(x):
+    return np.exp(x) / np.sum(np.exp(x))
+
+
 def stock_close_prices(key):
     '''return a list containing stock close prices from a .csv file'''
     prices = []
@@ -58,7 +62,8 @@ def generate_state(stock_prices, t, n):
 
 
 def generate_ddpg_state(stock_price, balance, num_holding):
-    return np.array([[stock_price, balance, num_holding]])
+    '''use log values of stock_price, balance, num_holding'''
+    return np.array([[np.log(stock_price), np.log(balance), np.log(num_holding + 1e-6)]])
 
 
 def daily_treasury_bond_return_rate():
@@ -68,13 +73,13 @@ def daily_treasury_bond_return_rate():
 
 # reference: https://en.wikipedia.org/wiki/Sharpe_ratio
 def sharpe_ratio(return_rates):
-	'''ex-ante Sharpe ratio'''
-	risk_free_rate = daily_treasury_bond_return_rate()
-	numerator = np.mean(np.array(return_rates) - risk_free_rate)
-	denominator = np.std(np.array(return_rates) - risk_free_rate)
-	if denominator == 0: # invalid case
-		return 0
-	return numerator / denominator
+    '''ex-ante Sharpe ratio'''
+    risk_free_rate = daily_treasury_bond_return_rate()
+    numerator = np.mean(np.array(return_rates) - risk_free_rate)
+    denominator = np.std(np.array(return_rates) - risk_free_rate)
+    if denominator == 0 or numerator == 0: # invalid cases
+        return 0
+    return numerator / denominator
 
 
 def maximum_drawdown(portfolio_values):
@@ -134,7 +139,7 @@ def plot_portfolio_performance_comparison(stock_name, agent):
 	plt.title('{} vs. Buy and Hold'.format(agent.model_type))
 	plt.plot(dates, agent.portfolio_values, color='green', label='{} Total Return: ${:.2f}'.format(agent.model_type, agent_return))
 	plt.plot(dates, buy_and_hold_portfolio_values, color='blue', label='{} Buy and Hold Total Return: ${:.2f}'.format(stock_name, buy_and_hold_return))
-	# compare with S&P 500 2018
+	# compare with S&P 500 performance in 2018
 	if '^GSPC' not in stock_name:
 		dates, GSPC_buy_and_hold_portfolio_values, GSPC_buy_and_hold_return = buy_and_hold_benchmark('^GSPC_2018', agent)
 		plt.plot(dates, GSPC_buy_and_hold_portfolio_values, color='red', label='S&P 500 2018 Buy and Hold Total Return: ${:.2f}'.format(GSPC_buy_and_hold_return))
@@ -143,6 +148,41 @@ def plot_portfolio_performance_comparison(stock_name, agent):
 	plt.legend()
 	plt.grid()
 	plt.show()
+
+
+def plot_all(stock_name, agent):
+    '''combined plots of plot_portfolio_transaction_history and plot_portfolio_performance_comparison'''
+    fig, ax = plt.subplots(2, 1, figsize=(16,8), dpi=100)
+
+    portfolio_return = agent.portfolio_values[-1] - agent.initial_portfolio_value
+    df = pd.read_csv('./data/{}.csv'.format(stock_name))
+    buy_prices = [df.iloc[t, 4] for t in agent.buy_dates]
+    sell_prices = [df.iloc[t, 4] for t in agent.sell_dates]
+    ax[0].set_title('{} Total Return on {}: ${:.2f}'.format(agent.model_type, stock_name, portfolio_return))
+    ax[0].plot(df['Date'], df['Close'], color='black', label=stock_name)
+    ax[0].scatter(agent.buy_dates, buy_prices, c='green', alpha=0.5, label='buy')
+    ax[0].scatter(agent.sell_dates, sell_prices,c='red', alpha=0.5, label='sell')
+    ax[0].set_ylabel('Price')
+    ax[0].set_xticks(np.linspace(0, len(df), 10))
+    ax[0].legend()
+    ax[0].grid()
+
+    dates, buy_and_hold_portfolio_values, buy_and_hold_return = buy_and_hold_benchmark(stock_name, agent)
+    agent_return = agent.portfolio_values[-1] - agent.initial_portfolio_value
+    ax[1].set_title('{} vs. Buy and Hold'.format(agent.model_type))
+    ax[1].plot(dates, agent.portfolio_values, color='green', label='{} Total Return: ${:.2f}'.format(agent.model_type, agent_return))
+    ax[1].plot(dates, buy_and_hold_portfolio_values, color='blue', label='{} Buy and Hold Total Return: ${:.2f}'.format(stock_name, buy_and_hold_return))
+    # compare with S&P 500 performance in 2018
+    if '^GSPC' not in stock_name:
+    	dates, GSPC_buy_and_hold_portfolio_values, GSPC_buy_and_hold_return = buy_and_hold_benchmark('^GSPC_2018', agent)
+    	ax[1].plot(dates, GSPC_buy_and_hold_portfolio_values, color='red', label='S&P 500 2018 Buy and Hold Total Return: ${:.2f}'.format(GSPC_buy_and_hold_return))
+    ax[1].set_ylabel('Portfolio Value ($)')
+    ax[1].set_xticks(np.linspace(0, len(df), 10))
+    ax[1].legend()
+    ax[1].grid()
+
+    plt.subplots_adjust(hspace=0.5)
+    plt.show()
 
 
 def plot_portfolio_returns_across_episodes(returns_across_episodes):

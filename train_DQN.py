@@ -17,12 +17,12 @@ initial_funding = 50000
 agent = Agent(window_size, balance=initial_funding)
 returns_across_episodes  = []
 
-def buy():
+def buy(t):
 	agent.balance -= stock_prices[t]
 	agent.inventory.append(stock_prices[t])
 	print('Buy: ${:.2f}'.format(stock_prices[t]))
 
-def sell():
+def sell(t):
 	agent.balance += stock_prices[t]
 	bought_price = agent.inventory.pop(0)
 	profit = stock_prices[t] - bought_price
@@ -33,10 +33,7 @@ def sell():
 for e in range(1, episode_count + 1):
     print('\nEpisode: {}/{}'.format(e, episode_count))
 
-    agent.balance = initial_funding
-    agent.inventory = []
-    agent.return_rates = []
-    agent.portfolio_values = [initial_funding]
+    agent.reset(initial_funding)
     state = generate_state(stock_prices, 0, window_size + 1)
 
     for t in range(1, trading_period + 1):
@@ -49,17 +46,25 @@ for e in range(1, episode_count + 1):
         next_state = generate_state(stock_prices, t, window_size + 1)
         previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-        # buy
-        if action == 1 and agent.balance > stock_prices[t]: buy()
-        else:
-            next_action = np.argsort(actions)[1]  # second predicted action
-            if next_action == 2 and len(agent.inventory) > 0: sell()
+		# buy
+        if action == 1:
+            if agent.balance > stock_prices[t]: buy(t)
+            else: reward -= daily_treasury_bond_return_rate() * agent.balance # missing opportunity
         # sell
-        if action == 2 and len(agent.inventory) > 0: sell()
-        else:
+        if action == 2:
+            if len(agent.inventory) > 0: sell(t)
+            else: reward -= daily_treasury_bond_return_rate() * agent.balance
+	    # hold
+        if action == 0:
+            # encourage selling for maximizing liquidity
             next_action = np.argsort(actions)[1]
-            if next_action == 1: buy()
-        # hold
+            if next_action == 2 and len(agent.inventory) > 0:
+                bought_price = agent.inventory[0]
+                profit = stock_prices[t] - bought_price
+                if profit > 0: sell(t)
+                actions[next_action] = 1
+            else:
+                reward -= daily_treasury_bond_return_rate() * agent.balance
 
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
         agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
@@ -76,7 +81,7 @@ for e in range(1, episode_count + 1):
             portfolio_return = evaluate_portfolio_performance(agent)
             returns_across_episodes.append(portfolio_return)
 
-    if e % 10 == 0:
+    if e % 1 == 0:
         agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
         print('model saved')
 

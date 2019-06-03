@@ -2,15 +2,22 @@ import random
 from collections import deque
 
 import numpy as np
-np.random.seed(3)  # for reproducible Keras operations
+# np.random.seed(3)  # for reproducible Keras operations
 import tensorflow as tf
-from keras.models import Model
-from keras.models import load_model
+from keras.models import Model, load_model
 from keras.layers import Input, Dense, Concatenate
-from keras import backend as K
+from keras.activations import softmax
 from keras.optimizers import Adam
+from keras import backend as K
 
 from utils import OUNoise
+
+
+# Tensorflow GPU configuration
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+K.set_session(sess)
 
 
 HIDDEN1_UNITS = 24
@@ -18,22 +25,20 @@ HIDDEN2_UNITS = 48
 
 
 class ActorNetwork:
-    def __init__(self, sess, state_size, action_size, batch_size, tau, learning_rate, is_eval=False, model_name=""):
+    def __init__(self, sess, state_size, action_dim, tau, learning_rate, is_eval=False, model_name=""):
         self.sess = sess
-        self.batch_size = batch_size
         self.tau = tau
         self.learning_rate = learning_rate
+        self.action_dim = action_dim
         if is_eval == True:
-            self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
+            self.model, self.weights, self.state = self.create_actor_network(state_size, action_dim)
             self.model.load_weights("saved_models/" + model_name)
         else:
-            K.set_session(sess)
-            self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
-            self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_size)
-            self.action_gradient = tf.placeholder(tf.float32, [None, action_size])
+            self.model, self.weights, self.state = self.create_actor_network(state_size, action_dim)
+            self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_dim)
+            self.action_gradient = tf.placeholder(tf.float32, [None, action_dim])
             self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
             self.optimize = tf.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
-            self.sess.run(tf.global_variables_initializer())
 
     def train(self, states, action_grads):
         self.sess.run(self.optimize, feed_dict={self.state: states, self.action_gradient: action_grads})
@@ -49,26 +54,24 @@ class ActorNetwork:
         states = Input(shape=[state_size])
         h0 = Dense(HIDDEN1_UNITS, activation='relu')(states)
         h1 = Dense(HIDDEN2_UNITS, activation='relu')(h0)
-        hold = Dense(1, activation='sigmoid')(h1)
-        buy = Dense(1, activation='sigmoid')(h1)
-        sell = Dense(1, activation='sigmoid')(h1)
-        actions = Concatenate()([hold, buy, sell])
+        # hold = Dense(1, activation='sigmoid')(h1)
+        # buy = Dense(1, activation='sigmoid')(h1)
+        # sell = Dense(1, activation='sigmoid')(h1)
+        # actions = Concatenate()([hold, buy, sell])
+        actions = Dense(self.action_dim, activation='softmax')(h1)
         model = Model(inputs=states, outputs=actions)
         return model, model.trainable_weights, states
 
 
 class CriticNetwork:
-    def __init__(self, sess, state_size, action_size, batch_size, tau, learning_rate, is_eval=False, model_name=""):
+    def __init__(self, sess, state_size, action_dim, tau, learning_rate, is_eval=False, model_name=""):
         self.sess = sess
-        self.batch_size = batch_size
         self.tau = tau
         self.learning_rate = learning_rate
-        self.action_size = action_size
-        K.set_session(sess)
-        self.model, self.action, self.state = self.create_critic_network(state_size, action_size)
-        self.target_model, self.target_action, self.target_state = self.create_critic_network(state_size, action_size)
+        self.action_dim = action_dim
+        self.model, self.action, self.state = self.create_critic_network(state_size, action_dim)
+        self.target_model, self.target_action, self.target_state = self.create_critic_network(state_size, action_dim)
         self.action_grads = tf.gradients(self.model.output, self.action)
-        self.sess.run(tf.global_variables_initializer())
 
     def gradients(self, states, actions):
         return self.sess.run(self.action_grads, feed_dict={self.state: states, self.action: actions})[0]
@@ -114,12 +117,16 @@ class Agent:
         LRA = 0.001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
 
-        # Tensorflow GPU configuration
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        sess = tf.Session(config=config)
-        self.actor = ActorNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRA, is_eval, model_name)
-        self.critic = CriticNetwork(sess, state_dim, self.action_dim, self.batch_size, tau, LRC)
+        self.actor = ActorNetwork(sess, state_dim, self.action_dim, tau, LRA, is_eval, model_name)
+        self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, LRC)
+        sess.run(tf.global_variables_initializer())
+
+    def reset(self, balance):
+        self.balance = balance
+        self.inventory = []
+        self.return_rates = []
+        self.portfolio_values = [balance]
+        self.noise.reset()
 
     def remember(self, state, actions, reward, next_state, done):
     	self.memory.append((state, actions, reward, next_state, done))
@@ -130,9 +137,9 @@ class Agent:
             return self.noise.get_actions(actions, t)
         return actions
 
-    def experience_replay(self, batch_size, e, t):
+    def experience_replay(self, e, t):
         # retrieve random batch_size long memory from deque
-        mini_batch = random.sample(self.memory, batch_size)
+        mini_batch = random.sample(self.memory, self.batch_size)
 
         y_batch = []
         for state, actions, reward, next_state, done in mini_batch:

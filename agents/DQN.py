@@ -11,8 +11,8 @@ from keras.optimizers import Adam
 class Agent:
     def __init__(self, state_size, balance=50000, is_eval=False, model_name=""):
         self.model_type = 'DQN'
-        self.state_size = state_size  # normalized previous days
-        self.action_space = 3  # hold, buy, sell
+        self.state_size = state_size
+        self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=1000)
         self.initial_portfolio_value = balance
         self.balance = balance
@@ -34,16 +34,22 @@ class Agent:
         model.add(Dense(units=64, input_dim=self.state_size, activation="relu"))
         model.add(Dense(units=32, activation="relu"))
         model.add(Dense(units=8, activation="relu"))
-        model.add(Dense(self.action_space, activation="linear"))
+        model.add(Dense(self.action_dim, activation="softmax"))
         model.compile(loss="mse", optimizer=Adam(lr=0.001))
         return model
+
+    def reset(self, balance):
+        self.balance = balance
+        self.inventory = []
+        self.return_rates = []
+        self.portfolio_values = [balance]
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
         if not self.is_eval and np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_space)
+            return random.randrange(self.action_dim)
         options = self.model.predict(state)
         return np.argmax(options[0])
 
