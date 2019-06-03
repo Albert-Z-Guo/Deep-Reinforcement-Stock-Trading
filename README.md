@@ -12,7 +12,7 @@ Key assumptions and limitations of the current frameworks:
 - all reallocations can be finished at the closing prices
 - no missing data in price history
 
-Currently, the state of DDPG algorithm is defined as `[stock_price, balance, num_holding]` and the state of DQN algorithm is defined as the adjacent daily stock price differences for `n` days.
+Currently, the state is defined as the normalized adjacent daily stock price differences for `n` days plus  `[stock_price, balance, num_holding]`.
 
 In the future, we plan to add other state-of-the-art deep reinforcement learning algorithms, such as Proximal Policy Optimization (PPO), to the framework and increase the complexity to the state in each algorithm by constructing more complex price tensors etc. with a wider range of deep learning approaches, such as convolutional neural networks or attention mechanism.
 
@@ -24,7 +24,7 @@ pip3 install -r requirement.txt
 
 To train a DDPG agent or a DQN agent (with window size included), e.g. over S&P 500 from 2010 to 2015, run
 ```bash
-python3 train_DDPG.py ^GSPC_2010-2015 [epoch number]
+python3 train_DDPG.py ^GSPC_2010-2015 [window size] [epoch number]
 python3 train_DQN.py ^GSPC_2010-2015 [window size] [epoch number]
 ```
 
@@ -37,7 +37,7 @@ python3 evaluate_DQN.py [stock symbol] [model name]
 where stock symbols can be referred in `data` folder and model names can be referred in `saved_models`.
 
 ### Example Results
-![alt_text](./visualizations/DDPG_^GSPC_2016.png)
+![alt_text](./visualizations/DQN_^GSPC_2014.png)
 
 ### References:
 - [Deep Q-Learning with Keras and Gym](https://keon.io/deep-q-learning/)
