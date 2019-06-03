@@ -1,7 +1,7 @@
 import sys
 
 import numpy as np
-np.random.seed(3)  # for reproducible Keras operations
+# np.random.seed(3)  # for reproducible Keras operations
 from keras.models import load_model
 
 from utils import *
@@ -13,17 +13,16 @@ if len(sys.argv) != 3:
     exit()
 
 stock_name, model_name = sys.argv[1], sys.argv[2]
+state_dim = load_model("saved_models/" + model_name).layers[0].input.shape.as_list()[1]
 initial_funding = 50000
-model = load_model("saved_models/" + model_name)
-state_dim = model.layers[0].input.shape.as_list()[1]
 
 agent = Agent(state_size=state_dim, balance=initial_funding, is_eval=True, model_name=model_name)
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 display = True
 
-window_size = state_dim
-state = generate_state(stock_prices, 0, window_size + 1)
+window_size = state_dim - 3
+state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
 
 def buy(t):
@@ -45,10 +44,10 @@ def sell(t):
 
 for t in range(1, trading_period + 1):
     actions = agent.model.predict(state)[0]
-    print('actions:' actions)
+    print('actions:', actions)
     action = agent.act(state)
-    print('chosen action:' action)
-    next_state = generate_state(stock_prices, t, window_size + 1)
+    print('chosen action:', action)
+    next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
     previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
 	# buy

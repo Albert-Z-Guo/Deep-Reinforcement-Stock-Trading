@@ -13,7 +13,8 @@ class Agent:
         self.model_type = 'DQN'
         self.state_size = state_size
         self.action_dim = 3  # hold, buy, sell
-        self.memory = deque(maxlen=1000)
+        self.memory = deque(maxlen=100)
+        self.batch_size = 60
         self.initial_portfolio_value = balance
         self.balance = balance
         self.inventory = []

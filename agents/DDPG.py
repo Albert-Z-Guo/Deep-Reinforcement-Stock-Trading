@@ -101,7 +101,7 @@ class Agent:
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
-        self.batch_size = 60
+        self.batch_size = 90
         self.initial_portfolio_value = balance
         self.balance = balance
         self.inventory = []

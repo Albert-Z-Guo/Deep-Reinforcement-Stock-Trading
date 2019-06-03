@@ -14,13 +14,14 @@ if len(sys.argv) != 3:
 
 stock_name, model_name = sys.argv[1], sys.argv[2]
 initial_funding = 50000
+window_size = 10
 display = True
 
-agent = Agent(state_dim=3, balance=initial_funding, is_eval=True, model_name=model_name)
+agent = Agent(state_dim=13, balance=initial_funding, is_eval=True, model_name=model_name)
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 
-state = generate_ddpg_state(stock_prices[0], agent.balance, len(agent.inventory))
+state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
 def buy(t):
     agent.balance -= stock_prices[t]
@@ -39,10 +40,11 @@ def sell(t):
 
 for t in range(1, trading_period + 1):
     actions = agent.act(state, t)
-    print('actions:' actions)
+    print('actions:', actions)
     action = np.argmax(actions)
-    print('chosen action:' action)
-    next_state = generate_ddpg_state(stock_prices[t], agent.balance, len(agent.inventory))
+    print('chosen action:', action)
+
+    next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
     previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
 	# buy

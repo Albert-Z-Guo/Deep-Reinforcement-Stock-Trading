@@ -47,23 +47,34 @@ def stock_close_prices(key):
     return prices
 
 
-def generate_state(stock_prices, t, n):
+def generate_price_state(stock_prices, t, n):
     '''
-    return an n-day state representation ending at time t
+    return a state representation
     the state is defined as the adjacent daily stock price differences (sigmoid)
-    for a n-day period
+    for the past n days
+    note that a state has length n, a period has length n+1
     '''
-    d = t - n + 1
-    block = stock_prices[d:t + 1] if d >= 0 else -d * [stock_prices[0]] + stock_prices[0:t + 1]  # pad with t_0
-    res = []
-    for i in range(n - 1):
-        res.append(sigmoid(block[i + 1] - block[i]))
-    return np.array([res])
+    start = t - n
+    period = stock_prices[start:t+1] if start >= 0 else -start * [stock_prices[0]] + stock_prices[0:t+1]  # pad with t_0
+    diff = []
+    for i in range(n):
+        diff.append(sigmoid(period[i+1] - period[i]))
+    return np.array([diff])
 
 
-def generate_ddpg_state(stock_price, balance, num_holding):
+def generate_portfolio_state(stock_price, balance, num_holding):
     '''use log values of stock_price, balance, num_holding'''
     return np.array([[np.log(stock_price), np.log(balance), np.log(num_holding + 1e-6)]])
+
+
+def generate_combined_state(t, n, stock_prices, balance, num_holding):
+    start = t - n
+    period = stock_prices[start:t+1] if start >= 0 else -start * [stock_prices[0]] + stock_prices[0:t+1]  # pad with t_0
+    diff = []
+    for i in range(n):
+        diff.append(sigmoid(period[i+1] - period[i]))
+    diff.extend([np.log(stock_prices[t]), np.log(balance), np.log(num_holding + 1e-6)])
+    return np.array([diff])
 
 
 def daily_treasury_bond_return_rate():
