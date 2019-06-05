@@ -11,6 +11,7 @@ Key assumptions and limitations of the current frameworks:
 - the agent performs only 1 action for portfolio reallocation at the end of each trade day
 - all reallocations can be finished at the closing prices
 - no missing data in price history
+- no transaction cost
 
 Currently, the state is defined as the normalized adjacent daily stock price differences for `n` days plus  `[stock_price, balance, num_holding]`.
 

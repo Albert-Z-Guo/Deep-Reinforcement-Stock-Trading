@@ -68,9 +68,12 @@ for e in range(1, episode_count + 1):
                 reward -= daily_treasury_bond_return_rate() * agent.balance
 
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
-        agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
-        agent.portfolio_values.append(current_portfolio_value)
+        unrealized_profit = current_portfolio_value - agent.initial_portfolio_value
+        reward += unrealized_profit
 
+        agent.portfolio_values.append(current_portfolio_value)
+        agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
+        
         done = True if t == trading_period else False
         agent.remember(state, actions, reward, next_state, done)
         state = next_state

@@ -22,6 +22,7 @@ K.set_session(sess)
 
 HIDDEN1_UNITS = 24
 HIDDEN2_UNITS = 48
+HIDDEN3_UNITS = 24
 
 
 class ActorNetwork:
@@ -54,11 +55,12 @@ class ActorNetwork:
         states = Input(shape=[state_size])
         h0 = Dense(HIDDEN1_UNITS, activation='relu')(states)
         h1 = Dense(HIDDEN2_UNITS, activation='relu')(h0)
+        h2 = Dense(HIDDEN3_UNITS, activation='relu')(h1)
         # hold = Dense(1, activation='sigmoid')(h1)
         # buy = Dense(1, activation='sigmoid')(h1)
         # sell = Dense(1, activation='sigmoid')(h1)
         # actions = Concatenate()([hold, buy, sell])
-        actions = Dense(self.action_dim, activation='softmax')(h1)
+        actions = Dense(self.action_dim, activation='softmax')(h2)
         model = Model(inputs=states, outputs=actions)
         return model, model.trainable_weights, states
 
@@ -89,7 +91,8 @@ class CriticNetwork:
         h0 = Concatenate()([states, actions])
         h1 = Dense(HIDDEN1_UNITS, activation='relu')(h0)
         h2 = Dense(HIDDEN2_UNITS, activation='relu')(h1)
-        Q = Dense(action_dim, activation='relu')(h2)
+        h3 = Dense(HIDDEN3_UNITS, activation='relu')(h2)
+        Q = Dense(action_dim, activation='relu')(h3)
         model = Model(inputs=[states, actions], outputs=Q)
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=1e-6))
         return model, actions, states
