@@ -53,6 +53,7 @@ where `stock_name` can be referred in `data` directory and `model_to_laod` can b
 
 ### Example Results
 ![alt_text](./visualizations/DQN_^GSPC_2014.png)
+
 ![alt_text](./visualizations/DDPG_^GSPC_2018.png)
 
 ### References:
