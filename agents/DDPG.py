@@ -10,8 +10,6 @@ from keras.activations import softmax
 from keras.optimizers import Adam
 from keras import backend as K
 
-from utils import OUNoise
-
 
 # Tensorflow GPU configuration
 config = tf.ConfigProto()
@@ -56,10 +54,6 @@ class ActorNetwork:
         h0 = Dense(HIDDEN1_UNITS, activation='relu')(states)
         h1 = Dense(HIDDEN2_UNITS, activation='relu')(h0)
         h2 = Dense(HIDDEN3_UNITS, activation='relu')(h1)
-        # hold = Dense(1, activation='sigmoid')(h1)
-        # buy = Dense(1, activation='sigmoid')(h1)
-        # sell = Dense(1, activation='sigmoid')(h1)
-        # actions = Concatenate()([hold, buy, sell])
         actions = Dense(self.action_dim, activation='softmax')(h2)
         model = Model(inputs=states, outputs=actions)
         return model, model.trainable_weights, states
@@ -96,6 +90,33 @@ class CriticNetwork:
         model = Model(inputs=[states, actions], outputs=Q)
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=1e-6))
         return model, actions, states
+
+
+# reference: https://github.com/vitchyr/rlkit/blob/master/rlkit/exploration_strategies/ou_strategy.py
+class OUNoise:
+    def __init__(self, action_dim, mu=0.0, theta=0.15, max_sigma=0.3, min_sigma=0.3, decay_period=100000):
+        self.mu = mu
+        self.theta = theta
+        self.sigma = max_sigma
+        self.max_sigma = max_sigma
+        self.min_sigma = min_sigma
+        self.decay_period = decay_period
+        self.action_dim = action_dim
+        self.reset()
+
+    def reset(self):
+        self.state = np.ones(self.action_dim) * self.mu
+
+    def evolve_state(self):
+        x = self.state
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
+        self.state = x + dx
+        return self.state
+
+    def get_actions(self, actions, t=0):
+        ou_state = self.evolve_state()
+        self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
+        return np.clip(actions + ou_state, 0, 1)
 
 
 class Agent:

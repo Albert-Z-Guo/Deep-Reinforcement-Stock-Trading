@@ -9,9 +9,9 @@ from keras.optimizers import Adam
 
 
 class Agent:
-    def __init__(self, state_size, balance=50000, is_eval=False, model_name=""):
+    def __init__(self, state_dim, balance=50000, is_eval=False, model_name=""):
         self.model_type = 'DQN'
-        self.state_size = state_size
+        self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.batch_size = 60
@@ -32,7 +32,7 @@ class Agent:
 
     def _model(self):
         model = Sequential()
-        model.add(Dense(units=64, input_dim=self.state_size, activation="relu"))
+        model.add(Dense(units=64, input_dim=self.state_dim, activation="relu"))
         model.add(Dense(units=32, activation="relu"))
         model.add(Dense(units=8, activation="relu"))
         model.add(Dense(self.action_dim, activation="softmax"))
