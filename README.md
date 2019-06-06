@@ -45,7 +45,7 @@ python3 evaluate.py --model_name=model_name --model_to_load=model_to_load --stoc
 ```
 
 - `model_name`      is the model to use: either `DQN` or `DDPG`; default is `DQN`
-- `model_to_laod`   is the model to load; default is `DQN_ep1.h5`
+- `model_to_laod`   is the model to load; default is `DQN_ep10.h5`
 - `stock_name`   is the stock used to evaluate the model; default is `^GSPC_2018`, which is S&P 500 from 1/1/2018 to 12/31/2018
 - `initial_funding` is the initial funding of the portfolio; default is `50000`
 

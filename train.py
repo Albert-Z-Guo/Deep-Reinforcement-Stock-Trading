@@ -129,4 +129,4 @@ for e in range(1, num_episode + 1):
             agent.actor.model.save_weights('saved_models/DDPG_actor_ep' + str(e) + '.h5')
         print('model saved')
 
-plot_portfolio_returns_across_episodes(returns_across_episodes)
+plot_portfolio_returns_across_episodes(model_name, returns_across_episodes)

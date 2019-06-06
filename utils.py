@@ -171,12 +171,13 @@ def plot_all(stock_name, agent):
     plt.show()
 
 
-def plot_portfolio_returns_across_episodes(returns_across_episodes):
+def plot_portfolio_returns_across_episodes(model_name, returns_across_episodes):
+    len_episodes = len(returns_across_episodes)
     plt.figure(figsize=(15, 5), dpi=100)
     plt.title('Portfolio Returns')
     plt.plot(returns_across_episodes, color='black')
     plt.xlabel('Episode')
     plt.ylabel('Portfolio Value')
     plt.grid()
-    plt.savefig('returns_across_episodes.png')
+    plt.savefig('{}_returns_{}_episodes.png'.format(model_name, len_episodes))
     plt.show()
