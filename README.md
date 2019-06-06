@@ -13,9 +13,13 @@ Key assumptions and limitations of the current frameworks:
 - no missing data in price history
 - no transaction cost
 
+Key challenges of the current framework:
+- building a reliable reward mechanism
+- ensuring the framework is scalable and extensible
+
 Currently, the state is defined as the normalized adjacent daily stock price differences for `n` days plus  `[stock_price, balance, num_holding]`.
 
-In the future, we plan to add other state-of-the-art deep reinforcement learning algorithms, such as Proximal Policy Optimization (PPO), to the framework and increase the complexity to the state in each algorithm by constructing more complex price tensors etc. with a wider range of deep learning approaches, such as convolutional neural networks or attention mechanism.
+In the future, we plan to add other state-of-the-art deep reinforcement learning algorithms, such as Proximal Policy Optimization (PPO), to the framework and increase the complexity to the state in each algorithm by constructing more complex price tensors etc. with a wider range of deep learning approaches, such as convolutional neural networks or attention mechanism. In addition, we plan to integrate better pipelines for high quality data source, e.g. from vendors like [Quandl](https://www.quandl.com/); and backtesting, e.g. [zipline](https://github.com/quantopian/zipline).
 
 ### Getting Started
 To install all libraries/dependencies used in this project, run
