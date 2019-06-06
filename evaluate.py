@@ -11,16 +11,15 @@ parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model name")
 parser.add_argument('--model_to_load', action="store", dest="model_to_load", default='DQN_ep1.h5', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2018', help="stock name")
-parser.add_argument('--window_size', action="store", dest="window_size", default=10, help="span (days) of observation")
 parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, help='episode number')
 inputs = parser.parse_args()
 
 model_name = inputs.model_name
 model_to_load = inputs.model_to_load
 stock_name = inputs.stock_name
-window_size = inputs.window_size
 initial_funding = inputs.initial_funding
 display = True
+window_size = 10
 
 if model_name == 'DQN':
 	from agents.DQN import Agent
@@ -62,7 +61,7 @@ for t in range(1, trading_period + 1):
     next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
     previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-	# buy
+    # buy
     if action == 1 and agent.balance > stock_prices[t]: buy(t)
     # sell
     if action == 2 and len(agent.inventory) > 0: sell(t)

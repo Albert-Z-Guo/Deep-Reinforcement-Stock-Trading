@@ -25,17 +25,26 @@ pip3 install -r requirement.txt
 
 To train a DDPG agent or a DQN agent (with window size included), e.g. over S&P 500 from 2010 to 2015, run
 ```bash
-python3 train_DDPG.py ^GSPC_2010-2015 [window size] [epoch number]
-python3 train_DQN.py ^GSPC_2010-2015 [window size] [epoch number]
+python3 train.py --model_name=model_name --stock_name=stock_name
 ```
+
+- `model_name`      is the model to use: either `DQN` or `DDPG`; default is `DQN`
+- `stock_name`      is the stock used to train the model; default is `^GSPC_2010-2015`, which is S&P 500 from 1/1/2010 to 12/31/2015
+- `window_size`     is the span (days) of observation; default is `10`
+- `num_episode`     is the number of episodes used for training; default is `10`
+- `initial_funding` is the initial funding of the portfolio; default is `50000`
 
 To evaluate a DDPG or DQN agent, run
 ```bash
-python3 evaluate_DDPG.py [stock symbol] [model name]
-python3 evaluate_DQN.py [stock symbol] [model name]
+python3 evaluate.py --model_name=model_name --model_to_load=model_to_load --stock_name=stock_name
 ```
 
-where stock symbols can be referred in `data` folder and model names can be referred in `saved_models`.
+- `model_name`      is the model to use: either `DQN` or `DDPG`; default is `DQN`
+- `model_to_laod`   is the model to load; default is `DQN_ep1.h5`
+- `stock_name`   is the stock used to evaluate the model; default is `^GSPC_2018`, which is S&P 500 from 1/1/2018 to 12/31/2018
+- `initial_funding` is the initial funding of the portfolio; default is `50000`
+
+where `stock_name` can be referred in `data` directory and `model_to_laod` can be referred in `saved_models` directory.
 
 ### Example Results
 ![alt_text](./visualizations/DQN_^GSPC_2014.png)
