@@ -58,5 +58,6 @@ where `stock_name` can be referred in `data` directory and `model_to_laod` can b
 
 ### References:
 - [Deep Q-Learning with Keras and Gym](https://keon.io/deep-q-learning/)
+- [Introduction to Learning to Trade with Reinforcement Learning](http://www.wildml.com/)
 - [Adversarial Deep Reinforcement Learning in Portfolio Management](https://arxiv.org/abs/1808.09940)
 - [A Deep Reinforcement Learning Framework for the Financial Portfolio Management Problem](https://arxiv.org/abs/1706.10059)
