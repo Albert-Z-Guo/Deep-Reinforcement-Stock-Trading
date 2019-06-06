@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from empyrical import sharpe_ratio
 from matplotlib import pyplot as plt
 
 
@@ -56,7 +57,7 @@ def daily_treasury_bond_return_rate():
 
 
 # reference: https://en.wikipedia.org/wiki/Sharpe_ratio
-def sharpe_ratio(return_rates):
+def sharpe_ratio_custom(return_rates):
     '''ex-ante Sharpe ratio'''
     risk_free_rate = daily_treasury_bond_return_rate()
     numerator = np.mean(np.array(return_rates) - risk_free_rate)
@@ -83,7 +84,8 @@ def evaluate_portfolio_performance(agent):
     print('Portfolio Stocks Number: {}'.format(len(agent.inventory)))
     print('Total Return: ${:.2f}'.format(portfolio_return))
     print('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(agent.return_rates) * 100))
-    print('Sharpe Ratio: {:.3f}'.format(sharpe_ratio(agent.return_rates)))
+    print('Sharpe Ratio with annual factor and 0 daily risk-free return: {:.3f}'.format(sharpe_ratio(np.array(agent.return_rates))))
+    print('Sharpe Ratio wihout annual factor and daily Treasury Bond return: {:.3f}'.format(sharpe_ratio_custom(agent.return_rates)))
     print('Maximum Drawdown: {:.3f}%'.format(maximum_drawdown(agent.portfolio_values) * 100))
     print("--------------------------------")
     return portfolio_return
