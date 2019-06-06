@@ -122,7 +122,7 @@ for e in range(1, num_episode + 1):
             returns_across_episodes.append(portfolio_return)
 
     # save models periodically
-    if e % 1 == 0:
+    if e % 5 == 0:
         if model_name == 'DQN':
             agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
         elif model_name == 'DDPG':
