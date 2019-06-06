@@ -15,6 +15,7 @@ Key assumptions and limitations of the current frameworks:
 
 Key challenges of the current framework:
 - building a reliable reward mechanism
+- algorithms tend to be stationary quite often
 - ensuring the framework is scalable and extensible
 
 Currently, the state is defined as the normalized adjacent daily stock price differences for `n` days plus  `[stock_price, balance, num_holding]`.
@@ -52,6 +53,7 @@ where `stock_name` can be referred in `data` directory and `model_to_laod` can b
 
 ### Example Results
 ![alt_text](./visualizations/DQN_^GSPC_2014.png)
+![alt_text](./visualizations/DDPG_^GSPC_2018.png)
 
 ### References:
 - [Deep Q-Learning with Keras and Gym](https://keon.io/deep-q-learning/)
