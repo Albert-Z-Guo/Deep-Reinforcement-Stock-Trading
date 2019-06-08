@@ -179,5 +179,5 @@ def plot_portfolio_returns_across_episodes(model_name, returns_across_episodes):
     plt.xlabel('Episode')
     plt.ylabel('Portfolio Value')
     plt.grid()
-    plt.savefig('{}_returns_{}_episodes.png'.format(model_name, len_episodes))
+    plt.savefig('visualizations/{}_returns_ep{}.png'.format(model_name, len_episodes))
     plt.show()

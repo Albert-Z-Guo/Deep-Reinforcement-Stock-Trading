@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model name")
 parser.add_argument('--model_to_load', action="store", dest="model_to_load", default='DQN_ep10.h5', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2018', help="stock name")
-parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, help='episode number')
+parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, type=int, help='episode number')
 inputs = parser.parse_args()
 
 model_name = inputs.model_name

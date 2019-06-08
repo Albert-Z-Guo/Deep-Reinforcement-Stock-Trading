@@ -7,9 +7,9 @@ from utils import *
 parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2010-2015', help="stock name")
-parser.add_argument('--window_size', action="store", dest="window_size", default=10, help="span (days) of observation")
-parser.add_argument('--num_episode', action="store", dest="num_episode", default=10, help='episode number')
-parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, help='episode number')
+parser.add_argument('--window_size', action="store", dest="window_size", default=10, type=int, help="span (days) of observation")
+parser.add_argument('--num_episode', action="store", dest="num_episode", default=10, type=int, help='episode number')
+parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, type=int, help='episode number')
 inputs = parser.parse_args()
 
 model_name = inputs.model_name
