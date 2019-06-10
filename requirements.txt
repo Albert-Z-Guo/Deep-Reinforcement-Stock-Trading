@@ -3,5 +3,6 @@ pandas>=0.24.2
 matplotlib>=3.0.3
 Keras>=2.2.4
 msgpack>=0.6.1
-tensorflow-gpu=1.13.1
+tensorflow-gpu==1.13.1
 h5py>=2.9.0
+yahoofinancials
