@@ -51,6 +51,12 @@ python3 evaluate.py --model_name=model_name --model_to_load=model_to_load --stoc
 
 where `stock_name` can be referred in `data` directory and `model_to_laod` can be referred in `saved_models` directory.
 
+To visualize training loss and portfolio value fluctuations history, run:
+```bash
+tensorboard --logdir=logs/model_name
+```
+where `model_name` can either be `DQN` or `DDPG`.
+
 ### Example Results
 ![alt_text](./visualizations/DQN_^GSPC_2014.png)
 
