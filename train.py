@@ -27,7 +27,7 @@ agent = Agent(state_dim=window_size + 3, balance=initial_funding)
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 returns_across_episodes = []
-
+num_experience_replay = 0
 
 def buy(t):
     agent.balance -= stock_prices[t]
@@ -108,12 +108,13 @@ for e in range(1, num_episode + 1):
 
 		# experience replay
 		if len(agent.memory) > agent.batch_size:
+			num_experience_replay += 1
 			if model_name == 'DQN':
-				agent.experience_replay(agent.batch_size)
+				loss = agent.experience_replay(agent.batch_size)
 			elif model_name == 'DDPG':
-				loss = agent.experience_replay(e, t)
-				print('Loss {:.2f}'.format(loss))
-			print('Episode {:.0f} Step {:.0f} Action {:.0f} Reward {:.2f} Balance {:.2f} Number of Stocks {}'.format(e, t, action, reward, agent.balance, len(agent.inventory)))
+				loss = agent.experience_replay(num_experience_replay)
+			print('Episode {:.0f} Step {:.0f} Loss {:.2f} Action {:.0f} Reward {:.2f} Balance {:.2f} Number of Stocks {}'.format(e, t, loss, action, reward, agent.balance, len(agent.inventory)))
+			agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 
 		if done:
 			portfolio_return = evaluate_portfolio_performance(agent)

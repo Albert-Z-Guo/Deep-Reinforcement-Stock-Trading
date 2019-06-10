@@ -2,6 +2,7 @@ import random
 from collections import deque
 
 import numpy as np
+import tensorflow as tf
 from keras.models import Sequential
 from keras.models import load_model
 from keras.layers import Dense
@@ -28,9 +29,12 @@ class Agent:
         self.epsilon_min = 0.01  # minimum exploration rate
         self.epsilon_decay = 0.995
         self.is_eval = is_eval
-        self.model = load_model("saved_models/" + model_name) if is_eval else self._model()
+        self.model = load_model("saved_models/" + model_name) if is_eval else self.model()
 
-    def _model(self):
+        self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DQN', batch_size=90, update_freq='batch')
+        self.tensorboard.set_model(self.model)
+
+    def model(self):
         model = Sequential()
         model.add(Dense(units=64, input_dim=self.state_dim, activation="relu"))
         model.add(Dense(units=32, activation="relu"))
@@ -68,7 +72,9 @@ class Agent:
                 target = reward
             target_future = self.model.predict(state)
             target_future[0][action] = target
-            self.model.fit(state, target_future, epochs=1, verbose=0)
+            history = self.model.fit(state, target_future, epochs=1, verbose=0)
 
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
+
+        return history.history['loss'][0]

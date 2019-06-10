@@ -145,6 +145,9 @@ class Agent:
         self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, LRC)
         sess.run(tf.global_variables_initializer())
 
+        self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DDPG', batch_size=90, update_freq='batch')
+        self.tensorboard.set_model(self.critic.model)
+
     def reset(self, balance):
         self.balance = balance
         self.inventory = []
@@ -161,7 +164,7 @@ class Agent:
             return self.noise.get_actions(actions, t)
         return actions
 
-    def experience_replay(self, e, t):
+    def experience_replay(self, num_experience_replay):
         # retrieve random batch_size long memory from deque
         mini_batch = random.sample(self.memory, self.batch_size)
 
