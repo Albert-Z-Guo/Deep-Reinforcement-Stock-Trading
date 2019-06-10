@@ -137,7 +137,7 @@ class Agent:
         self.gamma = 0.95 # discount factor
         self.is_eval = is_eval
         self.noise = OUNoise(self.action_dim)
-        tau = 0.001  # Target Network Hyper Parameter
+        tau = 0.001  # Target Network Hyperparameter
         LRA = 0.001  # learning rate for Actor Network
         LRC = 0.001  # learning rate for Critic Network
 
