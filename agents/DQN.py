@@ -70,9 +70,9 @@ class Agent:
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
             else:
                 target = reward
-            target_future = self.model.predict(state)
-            target_future[0][action] = target
-            history = self.model.fit(state, target_future, epochs=1, verbose=0)
+            next_action = self.model.predict(state)
+            next_action[0][action] = target
+            history = self.model.fit(state, next_action, epochs=1, verbose=0)
 
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay

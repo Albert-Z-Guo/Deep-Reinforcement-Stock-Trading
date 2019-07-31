@@ -58,6 +58,7 @@ tensorboard --logdir=logs/model_name
 where `model_name` can either be `DQN` or `DDPG`.
 
 ### Example Results
+Note that the following results were obtained with 10 epochs of training only. 
 ![alt_text](./visualizations/DQN_^GSPC_2014.png)
 
 ![alt_text](./visualizations/DDPG_^GSPC_2018.png)
