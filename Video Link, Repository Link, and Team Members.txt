@@ -1,0 +1,10 @@
+To make the video down to 5 minutes, please play the video at 1.5 speed:
+https://youtu.be/4L_FRzSefZk
+
+GitHub Repository:
+https://github.com/Albert-Z-Guo/Deep-Reinforcement-Stock-Trading
+
+Team Members:
+Albert Zunran Guo (zgu682)
+Yihan Zhang (yzz3892)
+Hanlin Wang (hww090)
