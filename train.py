@@ -1,9 +1,11 @@
 import sys
+import time
 import argparse
 
 from utils import *
 
 
+start_time = time.time()
 parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2010-2015', help="stock name")
@@ -18,29 +20,50 @@ window_size = inputs.window_size
 num_episode = inputs.num_episode
 initial_funding = inputs.initial_funding
 
-if model_name == 'DQN':
-    from agents.DQN import Agent
-elif model_name == 'DDPG':
-    from agents.DDPG import Agent
-
-agent = Agent(state_dim=window_size + 3, balance=initial_funding)
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 returns_across_episodes = []
 num_experience_replay = 0
+action_dict = {0: 'Hold', 1: 'Hold', 2: 'Sell'}
+
+# select learning model
+if model_name == 'DQN':
+    from agents.DQN import Agent
+elif model_name == 'DDPG':
+    from agents.DDPG import Agent
+agent = Agent(state_dim=window_size + 3, balance=initial_funding)
+
+print('Trading Object:           {}'.format(stock_name))
+print('Trading Period:           {}'.format(trading_period))
+print('Window Size:              {}'.format(window_size))
+print('Training Episode:         {}'.format(num_episode))
+print('Model Name:               {}'.format(model_name))
+print('Initial Portfolio Value: ${:,}'.format(initial_funding))
+
+def hold(actions):
+    # encourage selling for profit and liquidity
+    next_probable_action = np.argsort(actions)[1]
+    if next_probable_action == 2 and len(agent.inventory) > 0:
+        max_profit = stock_prices[t] - min(agent.inventory)
+        if max_profit > 0:
+            sell(t)
+            actions[next_probable_action] = 1 # reset this action's value to the highest
+            return 'Hold', actions
 
 def buy(t):
-    agent.balance -= stock_prices[t]
-    agent.inventory.append(stock_prices[t])
-    print('Buy: ${:.2f}'.format(stock_prices[t]))
+    if agent.balance > stock_prices[t]:
+        agent.balance -= stock_prices[t]
+        agent.inventory.append(stock_prices[t])
+        return 'Buy: ${:.2f}\n'.format(stock_prices[t])
 
 def sell(t):
-    agent.balance += stock_prices[t]
-    bought_price = agent.inventory.pop(0)
-    profit = stock_prices[t] - bought_price
-    global reward
-    reward = profit
-    print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+    if len(agent.inventory) > 0:
+        agent.balance += stock_prices[t]
+        bought_price = agent.inventory.pop(0)
+        profit = stock_prices[t] - bought_price
+        global reward
+        reward = profit
+        return 'Sell: ${:.2f} | Profit: ${:.2f}\n'.format(stock_prices[t], profit)
 
 for e in range(1, num_episode + 1):
     print('\nEpisode: {}/{}'.format(e, num_episode))
@@ -50,44 +73,37 @@ for e in range(1, num_episode + 1):
 
     for t in range(1, trading_period + 1):
         if t % 100 == 0:
-            print('-------------------Period: {}/{}-------------------'.format(t, trading_period))
+            print('\n-------------------Period: {}/{}-------------------'.format(t, trading_period))
 
         reward = 0
+        next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
+        previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
+
         if model_name == 'DQN':
             actions = agent.model.predict(state)[0]
             action = agent.act(state)
         elif model_name == 'DDPG':
             actions = agent.act(state, t)
             action = np.argmax(actions)
-        print('actions:', actions, '\n')
-
-        next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
-        previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
-
-        # buy
-        if action == 1:
-            if agent.balance > stock_prices[t]:
-                buy(t)
-            else:
-                reward -= daily_treasury_bond_return_rate() * agent.balance  # missing opportunity
-        # sell
-        if action == 2:
-            if len(agent.inventory) > 0:
-                sell(t)
-            else:
-                reward -= daily_treasury_bond_return_rate() * agent.balance
-        # hold
-        if action == 0:
-            # encourage selling to maximize liquidity
-            next_action = np.argsort(actions)[1]
-            if next_action == 2 and len(agent.inventory) > 0:
-                bought_price = agent.inventory[0]
-                profit = stock_prices[t] - bought_price
-                if profit > 0:
-                    sell(t)
-                actions[next_action] = 1
-            else:
-                reward -= daily_treasury_bond_return_rate() * agent.balance
+        
+        # execute position
+        print('Step: {} Hold signal: {:.4} \t Buy signal: {:.4} \t Sell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
+        if action != np.argmax(actions): print("\t'{}' is an exploration.".format(action_dict[action]))
+        if action == 0: # hold
+            execution_result = hold(actions)
+        if action == 1: # buy
+            execution_result = buy(t)      
+        if action == 2: # sell
+            execution_result = sell(t)        
+        
+        # check execution result
+        if execution_result is None:
+            reward -= daily_treasury_bond_return_rate() * agent.balance  # missing opportunity
+        else:
+            if len(execution_result) == 1:
+                print(execution_result[0])
+            elif len(execution_result) == 2:
+                actions = execution_result[1]
 
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
         unrealized_profit = current_portfolio_value - agent.initial_portfolio_value
@@ -112,7 +128,7 @@ for e in range(1, num_episode + 1):
                 loss = agent.experience_replay(agent.batch_size)
             elif model_name == 'DDPG':
                 loss = agent.experience_replay(num_experience_replay)
-            print('Episode {:.0f} Step {:.0f} Loss {:.2f} Action {:.0f} Reward {:.2f} Balance {:.2f} Number of Stocks {}'.format(e, t, loss, action, reward, agent.balance, len(agent.inventory)))
+            print('Episode: {:.0f}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
             agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 
         if done:
@@ -128,3 +144,4 @@ for e in range(1, num_episode + 1):
         print('model saved')
 
 plot_portfolio_returns_across_episodes(model_name, returns_across_episodes)
+print('total running time: {0:.2f} min'.format((time.time() - start_time)/60))
