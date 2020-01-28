@@ -1,6 +1,5 @@
-Keras>=2.2.4
 msgpack>=0.6.1
-tensorflow-gpu==1.13.1
+tensorflow==2.1.0
 h5py>=2.9.0
 numpy>=1.17.4
 scipy>=1.3.3
