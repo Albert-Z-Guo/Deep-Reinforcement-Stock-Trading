@@ -34,8 +34,8 @@ elif model_name == 'DDPG':
 agent = Agent(state_dim=window_size + 3, balance=initial_funding)
 
 print('Trading Object:           {}'.format(stock_name))
-print('Trading Period:           {}'.format(trading_period))
-print('Window Size:              {}'.format(window_size))
+print('Trading Period:           {} days'.format(trading_period))
+print('Window Size:              {} days'.format(window_size))
 print('Training Episode:         {}'.format(num_episode))
 print('Model Name:               {}'.format(model_name))
 print('Initial Portfolio Value: ${:,}'.format(initial_funding))
