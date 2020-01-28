@@ -4,18 +4,18 @@ from collections import deque
 import numpy as np
 # np.random.seed(3)  # for reproducible Keras operations
 import tensorflow as tf
-from keras.models import Model, load_model
-from keras.layers import Input, Dense, Concatenate
-from keras.activations import softmax
-from keras.optimizers import Adam
-from keras import backend as K
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Input, Dense, Concatenate
+from tensorflow.keras.activations import softmax
+from tensorflow.keras.optimizers import Adam
 
 
 # Tensorflow GPU configuration
-config = tf.ConfigProto()
+config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-K.set_session(sess)
+sess = tf.compat.v1.Session(config=config)
+tf.compat.v1.keras.backend.set_session(sess)
+tf.compat.v1.disable_eager_execution()
 
 
 HIDDEN1_UNITS = 24
@@ -35,9 +35,9 @@ class ActorNetwork:
         else:
             self.model, self.weights, self.state = self.create_actor_network(state_size, action_dim)
             self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_dim)
-            self.action_gradient = tf.placeholder(tf.float32, [None, action_dim])
+            self.action_gradient = tf.compat.v1.placeholder(tf.float32, [None, action_dim])
             self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
-            self.optimize = tf.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
+            self.optimize = tf.compat.v1.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
 
     def train(self, states, action_grads):
         self.sess.run(self.optimize, feed_dict={self.state: states, self.action_gradient: action_grads})
@@ -137,15 +137,15 @@ class Agent:
         self.gamma = 0.95 # discount factor
         self.is_eval = is_eval
         self.noise = OUNoise(self.action_dim)
-        tau = 0.001  # Target Network Hyperparameter
-        LRA = 0.001  # learning rate for Actor Network
-        LRC = 0.001  # learning rate for Critic Network
+        tau = 0.001  # Target network hyperparameter
+        learning_rate_actor = 0.001  # learning rate for Actor network
+        learning_rate_critic = 0.001  # learning rate for Critic network
 
-        self.actor = ActorNetwork(sess, state_dim, self.action_dim, tau, LRA, is_eval, model_name)
-        self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, LRC)
-        sess.run(tf.global_variables_initializer())
+        self.actor = ActorNetwork(sess, state_dim, self.action_dim, tau, learning_rate_actor, is_eval, model_name)
+        self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, learning_rate_critic)
+        sess.run(tf.compat.v1.global_variables_initializer())
 
-        self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DDPG', batch_size=90, update_freq='batch')
+        self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DDPG', update_freq=90)
         self.tensorboard.set_model(self.critic.model)
 
     def reset(self, balance):
@@ -171,8 +171,8 @@ class Agent:
         y_batch = []
         for state, actions, reward, next_state, done in mini_batch:
             if not done:
-                target_Q_values = self.critic.target_model.predict([next_state, self.actor.target_model.predict(next_state)])
-                y = reward + self.gamma * target_Q_values
+                Q_target_value = self.critic.target_model.predict([next_state, self.actor.target_model.predict(next_state)])
+                y = reward + self.gamma * Q_target_value
             else:
                 y = reward * np.ones((1, self.action_dim))
             y_batch.append(y)
@@ -180,11 +180,15 @@ class Agent:
         y_batch = np.vstack(y_batch)
         state_batch = np.vstack([tup[0] for tup in mini_batch])
         actions_batch = np.vstack([tup[1] for tup in mini_batch])
-
-        # update networks
+        
+        # update critic by minimizing the loss
         loss = self.critic.model.train_on_batch([state_batch, actions_batch], y_batch)
+
+        # update actor using the sampled policy gradients
         grads = self.critic.gradients(state_batch, self.actor.model.predict(state_batch))
         self.actor.train(state_batch, grads)
+        
+        # update target networks
         self.actor.train_target()
         self.critic.train_target()
         return loss
