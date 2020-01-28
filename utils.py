@@ -37,11 +37,14 @@ def generate_price_state(stock_prices, t, n):
 
 
 def generate_portfolio_state(stock_price, balance, num_holding):
-    '''use log values of stock_price, balance, num_holding'''
+    '''use log values of stock prices (length n), balance, and holding number'''
     return np.array([[np.log(stock_price), np.log(balance), np.log(num_holding + 1e-6)]])
 
 
 def generate_combined_state(t, n, stock_prices, balance, num_holding):
+    '''use adjacent stock prices differences (length n) after sigmoid,
+    log values of stock price at t, balance, and holding number
+    '''
     start = t - n
     period = stock_prices[start:t+1] if start >= 0 else -start * [stock_prices[0]] + stock_prices[0:t+1]  # pad with t_0
     diff = []
