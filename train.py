@@ -1,11 +1,11 @@
+import argparse
+import logging
 import sys
 import time
-import argparse
 
 from utils import *
 
 
-start_time = time.time()
 parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2010-2015', help="stock name")
@@ -33,13 +33,6 @@ elif model_name == 'DDPG':
     from agents.DDPG import Agent
 agent = Agent(state_dim=window_size + 3, balance=initial_funding)
 
-print('Trading Object:           {}'.format(stock_name))
-print('Trading Period:           {} days'.format(trading_period))
-print('Window Size:              {} days'.format(window_size))
-print('Training Episode:         {}'.format(num_episode))
-print('Model Name:               {}'.format(model_name))
-print('Initial Portfolio Value: ${:,}'.format(initial_funding))
-
 def hold(actions):
     # encourage selling for profit and liquidity
     next_probable_action = np.argsort(actions)[1]
@@ -65,15 +58,30 @@ def sell(t):
         reward = profit
         return 'Sell: ${:.2f} | Profit: ${:.2f}\n'.format(stock_prices[t], profit)
 
+# configure logger
+logger = logging.getLogger()
+handler = logging.FileHandler('logs/{}_{}_training.log'.format(model_name, stock_name), mode='w')
+handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p'))
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+logger.info('Trading Object:           {}'.format(stock_name))
+logger.info('Trading Period:           {} days'.format(trading_period))
+logger.info('Window Size:              {} days'.format(window_size))
+logger.info('Training Episode:         {}'.format(num_episode))
+logger.info('Model Name:               {}'.format(model_name))
+logger.info('Initial Portfolio Value: ${:,}'.format(initial_funding))
+
+start_time = time.time()
 for e in range(1, num_episode + 1):
-    print('\nEpisode: {}/{}'.format(e, num_episode))
+    logger.info('\nEpisode: {}/{}'.format(e, num_episode))
 
     agent.reset(initial_funding)
     state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
     for t in range(1, trading_period + 1):
         if t % 100 == 0:
-            print('\n-------------------Period: {}/{}-------------------'.format(t, trading_period))
+            logger.info('\n-------------------Period: {}/{}-------------------'.format(t, trading_period))
 
         reward = 0
         next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
@@ -87,8 +95,8 @@ for e in range(1, num_episode + 1):
             action = np.argmax(actions)
         
         # execute position
-        print('Step: {} Hold signal: {:.4} \t Buy signal: {:.4} \t Sell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
-        if action != np.argmax(actions): print("\t'{}' is an exploration.".format(action_dict[action]))
+        logger.info('Step: {} Hold signal: {:.4} \t Buy signal: {:.4} \t Sell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
+        if action != np.argmax(actions): logger.info("\t'{}' is an exploration.".format(action_dict[action]))
         if action == 0: # hold
             execution_result = hold(actions)
         if action == 1: # buy
@@ -128,7 +136,7 @@ for e in range(1, num_episode + 1):
                 loss = agent.experience_replay(agent.batch_size)
             elif model_name == 'DDPG':
                 loss = agent.experience_replay(num_experience_replay)
-            print('Episode: {:.0f}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
+            logger.info('Episode: {:.0f}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
             agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 
         if done:
@@ -141,7 +149,7 @@ for e in range(1, num_episode + 1):
             agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
         elif model_name == 'DDPG':
             agent.actor.model.save_weights('saved_models/DDPG_actor_ep' + str(e) + '.h5')
-        print('model saved')
+        logger.info('model saved')
 
+logger.info('total training time: {0:.2f} min'.format((time.time() - start_time)/60))
 plot_portfolio_returns_across_episodes(model_name, returns_across_episodes)
-print('total running time: {0:.2f} min'.format((time.time() - start_time)/60))
