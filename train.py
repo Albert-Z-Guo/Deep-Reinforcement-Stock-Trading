@@ -140,7 +140,7 @@ for e in range(1, num_episode + 1):
             agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 
         if done:
-            portfolio_return = evaluate_portfolio_performance(agent)
+            portfolio_return = evaluate_portfolio_performance(agent, logger)
             returns_across_episodes.append(portfolio_return)
 
     # save models periodically

@@ -78,19 +78,19 @@ def maximum_drawdown(portfolio_values):
     return (portfolio_values[end_index] - portfolio_values[beginning_iudex]) / portfolio_values[beginning_iudex]
 
 
-def evaluate_portfolio_performance(agent):
+def evaluate_portfolio_performance(agent, logger):
     current_portfolio_value = agent.portfolio_values[-1]
     portfolio_return = current_portfolio_value - agent.initial_portfolio_value
-    print("--------------------------------")
-    print('Portfolio Value: ${:.2f}'.format(current_portfolio_value))
-    print('Portfolio Balance: ${:.2f}'.format(agent.balance))
-    print('Portfolio Stocks Number: {}'.format(len(agent.inventory)))
-    print('Total Return: ${:.2f}'.format(portfolio_return))
-    print('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(agent.return_rates) * 100))
-    print('Sharpe Ratio with annual factor and 0 daily risk-free return: {:.3f}'.format(sharpe_ratio(np.array(agent.return_rates))))
-    print('Sharpe Ratio wihout annual factor and daily Treasury bond return: {:.3f}'.format(sharpe_ratio_custom(agent.return_rates)))
-    print('Maximum Drawdown: {:.3f}%'.format(maximum_drawdown(agent.portfolio_values) * 100))
-    print("--------------------------------")
+    logger.info("--------------------------------")
+    logger.info('Portfolio Value: ${:.2f}'.format(current_portfolio_value))
+    logger.info('Portfolio Balance: ${:.2f}'.format(agent.balance))
+    logger.info('Portfolio Stocks Number: {}'.format(len(agent.inventory)))
+    logger.info('Total Return: ${:.2f}'.format(portfolio_return))
+    logger.info('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(agent.return_rates) * 100))
+    logger.info('Sharpe Ratio with annual factor and 0 daily risk-free return: {:.3f}'.format(sharpe_ratio(np.array(agent.return_rates))))
+    logger.info('Sharpe Ratio wihout annual factor and daily Treasury bond return: {:.3f}'.format(sharpe_ratio_custom(agent.return_rates)))
+    logger.info('Maximum Drawdown: {:.3f}%'.format(maximum_drawdown(agent.portfolio_values) * 100))
+    logger.info("--------------------------------")
     return portfolio_return
 
 

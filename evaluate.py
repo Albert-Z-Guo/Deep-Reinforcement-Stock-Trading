@@ -1,5 +1,6 @@
-import sys
 import argparse
+import logging
+import sys
 
 import numpy as np
 # np.random.seed(3)  # for reproducible Keras operations
@@ -26,6 +27,13 @@ if model_name == 'DQN':
 elif model_name == 'DDPG':
 	from agents.DDPG import Agent
 
+# configure logger
+logger = logging.getLogger()
+handler = logging.FileHandler('logs/{}_{}_evaluation.log'.format(model_name, stock_name), mode='w')
+handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p'))
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
 portfolio_return = 0
 while portfolio_return == 0:
     agent = Agent(state_dim=13, balance=initial_funding, is_eval=True, model_name=model_to_load)
@@ -38,7 +46,7 @@ while portfolio_return == 0:
         agent.balance -= stock_prices[t]
         agent.inventory.append(stock_prices[t])
         agent.buy_dates.append(t)
-        print('Buy: ${:.2f}'.format(stock_prices[t]))
+        logger.info('Buy: ${:.2f}'.format(stock_prices[t]))
 
     def sell(t):
         agent.balance += stock_prices[t]
@@ -47,7 +55,7 @@ while portfolio_return == 0:
         global reward
         reward = profit
         agent.sell_dates.append(t)
-        print('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+        logger.info('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
 
     for t in range(1, trading_period + 1):
         if model_name == 'DQN':
