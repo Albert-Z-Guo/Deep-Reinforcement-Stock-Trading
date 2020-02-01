@@ -125,7 +125,7 @@ class Agent:
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
-        self.batch_size = 90
+        self.buffer_size = 90
         self.initial_portfolio_value = balance
         self.balance = balance
         self.inventory = []
@@ -164,9 +164,9 @@ class Agent:
             return self.noise.get_actions(actions, t)
         return actions
 
-    def experience_replay(self, num_experience_replay):
-        # retrieve random batch_size long memory from deque
-        mini_batch = random.sample(self.memory, self.batch_size)
+    def experience_replay(self):
+        # sample random buffer_size long memory
+        mini_batch = random.sample(self.memory, self.buffer_size)
 
         y_batch = []
         for state, actions, reward, next_state, done in mini_batch:

@@ -14,7 +14,7 @@ class Agent:
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
-        self.batch_size = 60
+        self.buffer_size = 60
         self.initial_portfolio_value = balance
         self.balance = balance
         self.inventory = []
@@ -58,11 +58,11 @@ class Agent:
         options = self.model.predict(state)
         return np.argmax(options[0])
 
-    def experience_replay(self, batch_size):
-        # retrieve recent batch_size long memory
+    def experience_replay(self):
+        # retrieve recent buffer_size long memory
         mini_batch = []
         l = len(self.memory)
-        for i in range(l - batch_size + 1, l):
+        for i in range(l - self.buffer_size + 1, l):
             mini_batch.append(self.memory[i])
 
         for state, action, reward, next_state, done in mini_batch:
