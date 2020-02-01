@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import logging
 import sys
 import time
@@ -27,11 +28,8 @@ num_experience_replay = 0
 action_dict = {0: 'Hold', 1: 'Hold', 2: 'Sell'}
 
 # select learning model
-if model_name == 'DQN':
-    from agents.DQN import Agent
-elif model_name == 'DDPG':
-    from agents.DDPG import Agent
-agent = Agent(state_dim=window_size + 3, balance=initial_funding)
+model = importlib.import_module('agents.{}'.format(model_name))
+agent = model.Agent(state_dim=window_size + 3, balance=initial_funding)
 
 def hold(actions):
     # encourage selling for profit and liquidity
@@ -130,12 +128,9 @@ for e in range(1, num_episode + 1):
         state = next_state
 
         # experience replay
-        if len(agent.memory) > agent.batch_size:
+        if len(agent.memory) > agent.buffer_size:
             num_experience_replay += 1
-            if model_name == 'DQN':
-                loss = agent.experience_replay(agent.batch_size)
-            elif model_name == 'DDPG':
-                loss = agent.experience_replay(num_experience_replay)
+            loss = agent.experience_replay()
             logger.info('Episode: {:.0f}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
             agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 

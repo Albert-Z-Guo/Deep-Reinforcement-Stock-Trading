@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import logging
 import sys
 
@@ -22,10 +23,8 @@ initial_funding = inputs.initial_funding
 display = True
 window_size = 10
 
-if model_name == 'DQN':
-	from agents.DQN import Agent
-elif model_name == 'DDPG':
-	from agents.DDPG import Agent
+# select evaluation model
+model = importlib.import_module('agents.{}'.format(model_name))
 
 # configure logger
 logger = logging.getLogger()
@@ -36,7 +35,7 @@ logger.setLevel(logging.INFO)
 
 portfolio_return = 0
 while portfolio_return == 0:
-    agent = Agent(state_dim=13, balance=initial_funding, is_eval=True, model_name=model_to_load)
+    agent = model.Agent(state_dim=13, balance=initial_funding, is_eval=True, model_name=model_to_load)
     stock_prices = stock_close_prices(stock_name)
     trading_period = len(stock_prices) - 1
 
@@ -46,7 +45,7 @@ while portfolio_return == 0:
         agent.balance -= stock_prices[t]
         agent.inventory.append(stock_prices[t])
         agent.buy_dates.append(t)
-        logger.info('Buy: ${:.2f}'.format(stock_prices[t]))
+        logger.info('Buy:  ${:.2f}'.format(stock_prices[t]))
 
     def sell(t):
         agent.balance += stock_prices[t]
@@ -85,7 +84,7 @@ while portfolio_return == 0:
 
         done = True if t == trading_period else False
         if done:
-            portfolio_return = evaluate_portfolio_performance(agent)
+            portfolio_return = evaluate_portfolio_performance(agent, logger)
 
 if display:
     # plot_portfolio_transaction_history(stock_name, agent)
