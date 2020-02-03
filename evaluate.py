@@ -10,7 +10,7 @@ from utils import *
 
 
 parser = argparse.ArgumentParser(description='command line options')
-parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model name")
+parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model type")
 parser.add_argument('--model_to_load', action="store", dest="model_to_load", default='DQN_ep10.h5', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2018', help="stock name")
 parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, type=int, help='episode number')
@@ -29,7 +29,7 @@ model = importlib.import_module('agents.{}'.format(model_name))
 # configure logger
 logger = logging.getLogger()
 handler = logging.FileHandler('logs/{}_{}_evaluation.log'.format(model_name, stock_name), mode='w')
-handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p'))
+handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
