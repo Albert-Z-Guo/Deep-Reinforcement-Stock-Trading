@@ -20,10 +20,7 @@ class Agent:
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.buffer_size = 60
-        self.batch_size = 100
-        self.target_network_replacement_freq = 10
-
-
+        
         self.initial_portfolio_value = balance
         self.balance = balance
         self.inventory = []
