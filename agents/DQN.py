@@ -49,8 +49,8 @@ class Agent:
         self.portfolio_values = [balance]
         self.epsilon = 1.0
 
-    def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+    def remember(self, state, actions, reward, next_state, done):
+        self.memory.append((state, actions, reward, next_state, done))
 
     def act(self, state):
         if not self.is_eval and np.random.rand() <= self.epsilon:
@@ -65,13 +65,13 @@ class Agent:
         for i in range(l - self.buffer_size + 1, l):
             mini_batch.append(self.memory[i])
 
-        for state, action, reward, next_state, done in mini_batch:
+        for state, actions, reward, next_state, done in mini_batch:
             if not done:
                 Q_target_value = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
             else:
                 Q_target_value = reward
             next_actions = self.model.predict(state)
-            next_actions[0][action] = Q_target_value
+            next_actions[0][np.argmax(actions)] = Q_target_value
             history = self.model.fit(state, next_actions, epochs=1, verbose=0)
 
         if self.epsilon > self.epsilon_min:
