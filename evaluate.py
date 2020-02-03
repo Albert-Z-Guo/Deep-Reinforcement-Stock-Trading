@@ -13,48 +13,47 @@ parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_name', action="store", dest="model_name", default='DQN', help="model type")
 parser.add_argument('--model_to_load', action="store", dest="model_to_load", default='DQN_ep10.h5', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2018', help="stock name")
-parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, type=int, help='episode number')
+parser.add_argument('--initial_balance', action="store", dest="initial_balance", default=50000, type=int, help='initial balance')
 inputs = parser.parse_args()
 
 model_name = inputs.model_name
 model_to_load = inputs.model_to_load
 stock_name = inputs.stock_name
-initial_funding = inputs.initial_funding
+initial_balance = inputs.initial_balance
 display = True
 window_size = 10
 
 # select evaluation model
 model = importlib.import_module('agents.{}'.format(model_name))
 
-# configure logger
-logger = logging.getLogger()
-handler = logging.FileHandler('logs/{}_{}_evaluation.log'.format(model_name, stock_name), mode='w')
-handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
-
-portfolio_return = 0
-while portfolio_return == 0:
-    agent = model.Agent(state_dim=13, balance=initial_funding, is_eval=True, model_name=model_to_load)
-    stock_prices = stock_close_prices(stock_name)
-    trading_period = len(stock_prices) - 1
-
-    state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
-
-    def buy(t):
+def buy(t):
         agent.balance -= stock_prices[t]
         agent.inventory.append(stock_prices[t])
         agent.buy_dates.append(t)
         logger.info('Buy:  ${:.2f}'.format(stock_prices[t]))
 
-    def sell(t):
-        agent.balance += stock_prices[t]
-        bought_price = agent.inventory.pop(0)
-        profit = stock_prices[t] - bought_price
-        global reward
-        reward = profit
-        agent.sell_dates.append(t)
-        logger.info('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+def sell(t):
+    agent.balance += stock_prices[t]
+    bought_price = agent.inventory.pop(0)
+    profit = stock_prices[t] - bought_price
+    global reward
+    reward = profit
+    agent.sell_dates.append(t)
+    logger.info('Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit))
+
+# configure logger
+logger = logging.getLogger()
+handler = logging.FileHandler('logs/{}_evaluation_{}.log'.format(model_name, stock_name), mode='w')
+handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+portfolio_return = 0
+while portfolio_return == 0: # a hack to avoid stationary case
+    agent = model.Agent(state_dim=13, balance=initial_balance, is_eval=True, model_name=model_to_load)
+    stock_prices = stock_close_prices(stock_name)
+    trading_period = len(stock_prices) - 1
+    state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
     for t in range(1, trading_period + 1):
         if model_name == 'DQN':
