@@ -8,26 +8,21 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
+from utils import Portfolio
+
 
 # references:
 # https://arxiv.org/pdf/1802.09477.pdf
 # https://arxiv.org/pdf/1509.06461.pdf
 # https://papers.nips.cc/paper/3964-double-q-learning.pdf
-class Agent:
-    def __init__(self, state_dim, balance=50000, is_eval=False, model_name=""):
+class Agent(Portfolio):
+    def __init__(self, state_dim, balance, is_eval=False, model_name=""):
+        super().__init__(balance=balance)
         self.model_type = 'DQN'
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.buffer_size = 60
-        
-        self.initial_portfolio_value = balance
-        self.balance = balance
-        self.inventory = []
-        self.return_rates = []
-        self.portfolio_values = [balance]
-        self.buy_dates = []
-        self.sell_dates = []
 
         self.tau = 0.0001
         self.gamma = 0.95
@@ -40,7 +35,7 @@ class Agent:
         self.model_target = load_model('saved_models/' + model_name + '_target') if is_eval else self.model
         self.model_target.set_weights(self.model.get_weights()) # hard copy model parameters to target model parameters
 
-        self.tensorboard = TensorBoard(log_dir='./logs/DQN', update_freq=90)
+        self.tensorboard = TensorBoard(log_dir='./logs/DDQN_tensorboard', update_freq=90)
         self.tensorboard.set_model(self.model)
 
     def update_model_target(self):
@@ -59,11 +54,8 @@ class Agent:
         model.compile(loss='mse', optimizer=Adam(lr=0.001))
         return model
 
-    def reset(self, balance):
-        self.balance = balance
-        self.inventory = []
-        self.return_rates = []
-        self.portfolio_values = [balance]
+    def reset(self):
+        self.reset_portfolio()
         self.epsilon = 1.0
 
     def remember(self, state, actions, reward, next_state, done):

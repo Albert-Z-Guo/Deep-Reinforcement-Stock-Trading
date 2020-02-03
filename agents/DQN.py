@@ -8,23 +8,19 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
+from utils import Portfolio
+
 
 # reference:
 # https://arxiv.org/pdf/1312.5602.pdf
-class Agent:
-    def __init__(self, state_dim, balance=50000, is_eval=False, model_name=""):
+class Agent(Portfolio):
+    def __init__(self, state_dim, balance, is_eval=False, model_name=""):
+        super().__init__(balance=balance)
         self.model_type = 'DQN'
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.buffer_size = 60
-        self.initial_portfolio_value = balance
-        self.balance = balance
-        self.inventory = []
-        self.return_rates = []
-        self.portfolio_values = [balance]
-        self.buy_dates = []
-        self.sell_dates = []
 
         self.gamma = 0.95
         self.epsilon = 1.0  # initial exploration rate
@@ -33,7 +29,7 @@ class Agent:
         self.is_eval = is_eval
         self.model = load_model('saved_models/' + model_name) if is_eval else self.model()
 
-        self.tensorboard = TensorBoard(log_dir='./logs/DQN', update_freq=90)
+        self.tensorboard = TensorBoard(log_dir='./logs/DQN_tensorboard', update_freq=90)
         self.tensorboard.set_model(self.model)
 
     def model(self):
@@ -45,12 +41,9 @@ class Agent:
         model.compile(loss='mse', optimizer=Adam(lr=0.001))
         return model
 
-    def reset(self, balance):
-        self.balance = balance
-        self.inventory = []
-        self.return_rates = []
-        self.portfolio_values = [balance]
-        self.epsilon = 1.0
+    def reset(self):
+        self.reset_portfolio()
+        self.epsilon = 1.0 # reset exploration rate
 
     def remember(self, state, actions, reward, next_state, done):
         self.memory.append((state, actions, reward, next_state, done))

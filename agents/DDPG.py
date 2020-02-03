@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.activations import softmax
 from tensorflow.keras.optimizers import Adam
 
+from utils import Portfolio
 
 # Tensorflow GPU configuration
 config = tf.compat.v1.ConfigProto()
@@ -121,20 +122,14 @@ class OUNoise:
         return np.clip(actions + ou_state, 0, 1)
 
 
-class Agent:
+class Agent(Portfolio):
     def __init__(self, state_dim, balance, is_eval=False, model_name=""):
+        super().__init__(balance=balance)
         self.model_type = 'DDPG'
         self.state_dim = state_dim
         self.action_dim = 3  # hold, buy, sell
         self.memory = deque(maxlen=100)
         self.buffer_size = 90
-        self.initial_portfolio_value = balance
-        self.balance = balance
-        self.inventory = []
-        self.return_rates = []
-        self.portfolio_values = [balance]
-        self.buy_dates = []
-        self.sell_dates = []
 
         self.gamma = 0.95 # discount factor
         self.is_eval = is_eval
@@ -147,14 +142,11 @@ class Agent:
         self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, learning_rate_critic)
         sess.run(tf.compat.v1.global_variables_initializer())
 
-        self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DDPG', update_freq=90)
+        self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DDPG_tensorboard', update_freq=90)
         self.tensorboard.set_model(self.critic.model)
 
-    def reset(self, balance):
-        self.balance = balance
-        self.inventory = []
-        self.return_rates = []
-        self.portfolio_values = [balance]
+    def reset(self):
+        self.reset_portfolio()
         self.noise.reset()
 
     def remember(self, state, actions, reward, next_state, done):

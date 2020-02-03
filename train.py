@@ -12,14 +12,14 @@ parser.add_argument('--model_name', action="store", dest="model_name", default='
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2010-2015', help="stock name")
 parser.add_argument('--window_size', action="store", dest="window_size", default=10, type=int, help="span (days) of observation")
 parser.add_argument('--num_episode', action="store", dest="num_episode", default=10, type=int, help='episode number')
-parser.add_argument('--initial_funding', action="store", dest="initial_funding", default=50000, type=int, help='episode number')
+parser.add_argument('--initial_balance', action="store", dest="initial_balance", default=50000, type=int, help='initial balance')
 inputs = parser.parse_args()
 
 model_name = inputs.model_name
 stock_name = inputs.stock_name
 window_size = inputs.window_size
 num_episode = inputs.num_episode
-initial_funding = inputs.initial_funding
+initial_balance = inputs.initial_balance
 
 stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
@@ -29,7 +29,7 @@ action_dict = {0: 'Hold', 1: 'Hold', 2: 'Sell'}
 
 # select learning model
 model = importlib.import_module('agents.{}'.format(model_name))
-agent = model.Agent(state_dim=window_size + 3, balance=initial_funding)
+agent = model.Agent(state_dim=window_size + 3, balance=initial_balance)
 
 def hold(actions):
     # encourage selling for profit and liquidity
@@ -58,8 +58,8 @@ def sell(t):
 
 # configure logger
 logger = logging.getLogger()
-handler = logging.FileHandler('logs/{}_{}_training.log'.format(model_name, stock_name), mode='w')
-handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] \t %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
+handler = logging.FileHandler('logs/{}_training_{}.log'.format(model_name, stock_name), mode='w')
+handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
@@ -68,13 +68,13 @@ logger.info('Trading Period:           {} days'.format(trading_period))
 logger.info('Window Size:              {} days'.format(window_size))
 logger.info('Training Episode:         {}'.format(num_episode))
 logger.info('Model Name:               {}'.format(model_name))
-logger.info('Initial Portfolio Value: ${:,}'.format(initial_funding))
+logger.info('Initial Portfolio Value: ${:,}'.format(initial_balance))
 
 start_time = time.time()
 for e in range(1, num_episode + 1):
     logger.info('\nEpisode: {}/{}'.format(e, num_episode))
 
-    agent.reset(initial_funding)
+    agent.reset() # reset to initial balance and hyperparameters
     state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
     for t in range(1, trading_period + 1):
