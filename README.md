@@ -1,8 +1,6 @@
 # Deep-Reinforcement-Stock-Trading
 
-This project intends to leverage deep reinforcement learning in portfolio management.
-
-The light-weight Deep Q-network (DQN) is inspired by [Q-Trader](https://github.com/edwardhdlu/q-trader) and the Deep Deterministic Policy Gradient (DDPG) agent structure is adapted from [DDPG-Keras-Torcs](https://github.com/yanpanlau/DDPG-Keras-Torcs) with deep integration. All evaluation metrics and visualizations are built from scratch.
+This project intends to leverage deep reinforcement learning in portfolio management. The framework structure is inspired by [Q-Trader](https://github.com/edwardhdlu/q-trader). A lot of new features and improvements are made in the training and evaluation pipelines. All evaluation metrics and visualizations are built from scratch.
 
 Key assumptions and limitations of the current framework:
 - trading has no impact on the market
@@ -66,6 +64,7 @@ Note that the following results were obtained with 10 epochs of training only.
 ### References:
 - [Deep Q-Learning with Keras and Gym](https://keon.io/deep-q-learning/)
 - [Double Deep Q Networks](https://towardsdatascience.com/double-deep-q-networks-905dd8325412)
+- [Using Keras and Deep Deterministic Policy Gradient to play TORCS](https://yanpanlau.github.io/2016/10/11/Torcs-Keras.html)
 - [Practical Deep Reinforcement Learning Approach for Stock Trading](https://arxiv.org/abs/1811.07522)
 - [Introduction to Learning to Trade with Reinforcement Learning](http://www.wildml.com/)
 - [Adversarial Deep Reinforcement Learning in Portfolio Management](https://arxiv.org/abs/1808.09940)
