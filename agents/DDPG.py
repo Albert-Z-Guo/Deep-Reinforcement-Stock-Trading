@@ -39,7 +39,7 @@ class ActorNetwork:
             self.model, self.weights, self.state = self.create_actor_network(state_size, action_dim)
             self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_dim)
             self.action_gradient = tf.compat.v1.placeholder(tf.float32, [None, action_dim])
-            self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
+            self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient) # chain rule: ∂a/∂θ * ∂Q(s,a)/∂a (action_gradients); minus sign for gradient descent
             self.optimize = tf.compat.v1.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
 
     def train(self, states, action_grads):
