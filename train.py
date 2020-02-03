@@ -45,7 +45,7 @@ def buy(t):
     if agent.balance > stock_prices[t]:
         agent.balance -= stock_prices[t]
         agent.inventory.append(stock_prices[t])
-        return 'Buy: ${:.2f}\n'.format(stock_prices[t])
+        return 'Buy: ${:.2f}'.format(stock_prices[t])
 
 def sell(t):
     if len(agent.inventory) > 0:
@@ -54,12 +54,12 @@ def sell(t):
         profit = stock_prices[t] - bought_price
         global reward
         reward = profit
-        return 'Sell: ${:.2f} | Profit: ${:.2f}\n'.format(stock_prices[t], profit)
+        return 'Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit)
 
 # configure logger
 logger = logging.getLogger()
 handler = logging.FileHandler('logs/{}_{}_training.log'.format(model_name, stock_name), mode='w')
-handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p'))
+handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] \t %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
@@ -85,16 +85,16 @@ for e in range(1, num_episode + 1):
         next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
         previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
 
-        if model_name == 'DQN':
-            actions = agent.model.predict(state)[0]
-            action = agent.act(state)
-        elif model_name == 'DDPG':
+        if model_name == 'DDPG':
             actions = agent.act(state, t)
             action = np.argmax(actions)
+        else:
+            actions = agent.model.predict(state)[0]
+            action = agent.act(state)
         
         # execute position
-        logger.info('Step: {} Hold signal: {:.4} \t Buy signal: {:.4} \t Sell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
-        if action != np.argmax(actions): logger.info("\t'{}' is an exploration.".format(action_dict[action]))
+        logger.info('Step: {}\tHold signal: {:.4} \tBuy signal: {:.4} \tSell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
+        if action != np.argmax(actions): logger.info("\t\t'{}' is an exploration.".format(action_dict[action]))
         if action == 0: # hold
             execution_result = hold(actions)
         if action == 1: # buy
@@ -106,11 +106,12 @@ for e in range(1, num_episode + 1):
         if execution_result is None:
             reward -= daily_treasury_bond_return_rate() * agent.balance  # missing opportunity
         else:
-            if len(execution_result) == 1:
-                print(execution_result[0])
-            elif len(execution_result) == 2:
+            if isinstance(execution_result, tuple): # if execution_result is 'Hold'
                 actions = execution_result[1]
+                execution_result = execution_result[0]
+            logger.info(execution_result)                
 
+        # calculate reward
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
         unrealized_profit = current_portfolio_value - agent.initial_portfolio_value
         reward += unrealized_profit
@@ -119,10 +120,7 @@ for e in range(1, num_episode + 1):
         agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)
 
         done = True if t == trading_period else False
-        if model_name == 'DQN':
-            agent.remember(state, action, reward, next_state, done)
-        elif model_name == 'DDPG':
-            agent.remember(state, actions, reward, next_state, done)
+        agent.remember(state, actions, reward, next_state, done)
 
         # update state
         state = next_state
@@ -131,7 +129,7 @@ for e in range(1, num_episode + 1):
         if len(agent.memory) > agent.buffer_size:
             num_experience_replay += 1
             loss = agent.experience_replay()
-            logger.info('Episode: {:.0f}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
+            logger.info('Episode: {}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
             agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 
         if done:
