@@ -23,6 +23,8 @@ HIDDEN2_UNITS = 48
 HIDDEN3_UNITS = 24
 
 
+# reference: 
+# https://arxiv.org/pdf/1509.02971.pdf
 class ActorNetwork:
     def __init__(self, sess, state_size, action_dim, tau, learning_rate, is_eval=False, model_name=""):
         self.sess = sess

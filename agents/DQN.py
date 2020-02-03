@@ -8,6 +8,9 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
+
+# reference:
+# https://arxiv.org/pdf/1312.5602.pdf
 class Agent:
     def __init__(self, state_dim, balance=50000, is_eval=False, model_name=""):
         self.model_type = 'DQN'
