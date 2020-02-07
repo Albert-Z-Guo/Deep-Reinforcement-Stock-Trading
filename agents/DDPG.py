@@ -33,17 +33,23 @@ class ActorNetwork:
         self.learning_rate = learning_rate
         self.action_dim = action_dim
         if is_eval == True:
-            self.model, self.weights, self.state = self.create_actor_network(state_size, action_dim)
+            self.model, self.weights, self.states = self.create_actor_network(state_size, action_dim)
             self.model.load_weights("saved_models/" + model_name)
         else:
-            self.model, self.weights, self.state = self.create_actor_network(state_size, action_dim)
+            self.model, self.weights, self.states = self.create_actor_network(state_size, action_dim)
             self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_dim)
             self.action_gradient = tf.compat.v1.placeholder(tf.float32, [None, action_dim])
-            self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient) # chain rule: ∂a/∂θ * ∂Q(s,a)/∂a (action_gradients); minus sign for gradient descent
+            # chain rule: ∂a/∂θ * ∂Q(s,a)/∂a (action_gradients); minus sign for gradient descent
+            self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
             self.optimize = tf.compat.v1.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
 
-    def train(self, states, action_grads):
-        self.sess.run(self.optimize, feed_dict={self.state: states, self.action_gradient: action_grads})
+    def train(self, states_batch, action_grads_batch):
+        outputs, params_grad, _ = self.sess.run([self.model.output, self.params_grad, self.optimize], feed_dict={self.states: states_batch, self.action_gradient: action_grads_batch})
+        print('outputs shape:', outputs.shape)
+        for i in range(len(params_grad)):
+            if i % 2 == 1:
+                print(i, params_grad[i])
+            print('params_grad level {} shape: {}'.format(i, params_grad[i].shape))
 
     def train_target(self):
         actor_weights = self.model.get_weights()
@@ -68,12 +74,12 @@ class CriticNetwork:
         self.tau = tau
         self.learning_rate = learning_rate
         self.action_dim = action_dim
-        self.model, self.action, self.state = self.create_critic_network(state_size, action_dim)
+        self.model, self.action, self.states = self.create_critic_network(state_size, action_dim)
         self.target_model, self.target_action, self.target_state = self.create_critic_network(state_size, action_dim)
         self.action_grads = tf.gradients(self.model.output, self.action)
 
-    def gradients(self, states, actions):
-        return self.sess.run(self.action_grads, feed_dict={self.state: states, self.action: actions})[0]
+    def gradients(self, states_batch, actions_batch):
+        return self.sess.run(self.action_grads, feed_dict={self.states: states_batch, self.action: actions_batch})[0]
 
     def train_target(self):
         critic_weights = self.model.get_weights()
@@ -108,13 +114,13 @@ class OUNoise:
         self.reset()
 
     def reset(self):
-        self.state = np.ones(self.action_dim) * self.mu
+        self.states = np.ones(self.action_dim) * self.mu
 
     def evolve_state(self):
-        x = self.state
+        x = self.states
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
-        self.state = x + dx
-        return self.state
+        self.states = x + dx
+        return self.states
 
     def get_actions(self, actions, t=0):
         ou_state = self.evolve_state()
@@ -172,15 +178,15 @@ class Agent(Portfolio):
             y_batch.append(y)
 
         y_batch = np.vstack(y_batch)
-        state_batch = np.vstack([tup[0] for tup in mini_batch])
-        actions_batch = np.vstack([tup[1] for tup in mini_batch])
+        states_batch = np.vstack([tup[0] for tup in mini_batch]) # batch_size * state_dim
+        actions_batch = np.vstack([tup[1] for tup in mini_batch]) # batch_size * action_dim
         
         # update critic by minimizing the loss
-        loss = self.critic.model.train_on_batch([state_batch, actions_batch], y_batch)
+        loss = self.critic.model.train_on_batch([states_batch, actions_batch], y_batch)
 
         # update actor using the sampled policy gradients
-        grads = self.critic.gradients(state_batch, self.actor.model.predict(state_batch))
-        self.actor.train(state_batch, grads)
+        action_grads_batch = self.critic.gradients(states_batch, self.actor.model.predict(states_batch)) # batch_size * action_dim
+        self.actor.train(states_batch, action_grads_batch)
         
         # update target networks
         self.actor.train_target()
