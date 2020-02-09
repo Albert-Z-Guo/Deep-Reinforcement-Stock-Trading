@@ -21,15 +21,19 @@ stock_name = inputs.stock_name
 initial_balance = inputs.initial_balance
 display = True
 window_size = 10
+action_dict = {0: 'Hold', 1: 'Hold', 2: 'Sell'}
 
 # select evaluation model
 model = importlib.import_module('agents.{}'.format(model_name))
 
+def hold():
+    logger.info('Hold')
+
 def buy(t):
-        agent.balance -= stock_prices[t]
-        agent.inventory.append(stock_prices[t])
-        agent.buy_dates.append(t)
-        logger.info('Buy:  ${:.2f}'.format(stock_prices[t]))
+    agent.balance -= stock_prices[t]
+    agent.inventory.append(stock_prices[t])
+    agent.buy_dates.append(t)
+    logger.info('Buy:  ${:.2f}'.format(stock_prices[t]))
 
 def sell(t):
     agent.balance += stock_prices[t]
@@ -67,13 +71,13 @@ while portfolio_return == 0: # a hack to avoid stationary case
 
         next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
         previous_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
-
-        # buy
-        if action == 1 and agent.balance > stock_prices[t]: buy(t)
-        # sell
-        if action == 2 and len(agent.inventory) > 0: sell(t)
-        # hold
-        if action == 0: pass
+        
+        # execute position
+        logger.info('Step: {}'.format(t))
+        if action != np.argmax(actions): logger.info("\t\t'{}' is an exploration.".format(action_dict[action]))
+        if action == 0: hold() # hold
+        if action == 1 and agent.balance > stock_prices[t]: buy(t) # buy
+        if action == 2 and len(agent.inventory) > 0: sell(t) # sell
 
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
         agent.return_rates.append((current_portfolio_value - previous_portfolio_value) / previous_portfolio_value)

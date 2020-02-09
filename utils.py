@@ -71,20 +71,9 @@ def generate_combined_state(t, n, stock_prices, balance, num_holding):
     return np.array([diff])
 
 
-def daily_treasury_bond_return_rate():
+def treasury_bond_daily_return_rate():
     r_year = 2.75 / 100  # approximate annual U.S. Treasury bond return rate
     return (1 + r_year)**(1 / 365) - 1
-
-
-# reference: https://en.wikipedia.org/wiki/Sharpe_ratio
-def sharpe_ratio_custom(return_rates):
-    '''ex-ante Sharpe ratio'''
-    risk_free_rate = daily_treasury_bond_return_rate()
-    numerator = np.mean(np.array(return_rates) - risk_free_rate)
-    denominator = np.std(np.array(return_rates) - risk_free_rate)
-    if denominator == 0 or numerator == 0: # invalid cases
-        return 0
-    return numerator / denominator
 
 
 def maximum_drawdown(portfolio_values):
@@ -96,17 +85,15 @@ def maximum_drawdown(portfolio_values):
 
 
 def evaluate_portfolio_performance(agent, logger):
-    current_portfolio_value = agent.portfolio_values[-1]
-    portfolio_return = current_portfolio_value - agent.initial_portfolio_value
+    portfolio_return = agent.portfolio_values[-1] - agent.initial_portfolio_value
     logger.info("--------------------------------")
-    logger.info('Portfolio Value: ${:.2f}'.format(current_portfolio_value))
-    logger.info('Portfolio Balance: ${:.2f}'.format(agent.balance))
+    logger.info('Portfolio Value:        ${:.2f}'.format(agent.portfolio_values[-1]))
+    logger.info('Portfolio Balance:      ${:.2f}'.format(agent.balance))
     logger.info('Portfolio Stocks Number: {}'.format(len(agent.inventory)))
-    logger.info('Total Return: ${:.2f}'.format(portfolio_return))
-    logger.info('Mean/Daily Return Rate: {:.3f}%'.format(np.mean(agent.return_rates) * 100))
-    logger.info('Sharpe Ratio with annual factor and 0 daily risk-free return: {:.3f}'.format(sharpe_ratio(np.array(agent.return_rates))))
-    logger.info('Sharpe Ratio wihout annual factor and daily Treasury bond return: {:.3f}'.format(sharpe_ratio_custom(agent.return_rates)))
-    logger.info('Maximum Drawdown: {:.3f}%'.format(maximum_drawdown(agent.portfolio_values) * 100))
+    logger.info('Total Return:           ${:.2f}'.format(portfolio_return))
+    logger.info('Mean/Daily Return Rate:  {:.3f}%'.format(np.mean(agent.return_rates) * 100))
+    logger.info('Sharpe Ratio adjusted with Treasury bond daily return: {:.3f}'.format(sharpe_ratio(np.array(agent.return_rates)), risk_free=treasury_bond_daily_return_rate()))
+    logger.info('Maximum Drawdown:        {:.3f}%'.format(maximum_drawdown(agent.portfolio_values) * 100))
     logger.info("--------------------------------")
     return portfolio_return
 
@@ -197,7 +184,7 @@ def plot_portfolio_returns_across_episodes(model_name, returns_across_episodes):
     plt.title('Portfolio Returns')
     plt.plot(returns_across_episodes, color='black')
     plt.xlabel('Episode')
-    plt.ylabel('Portfolio Value')
+    plt.ylabel('Return Value')
     plt.grid()
     plt.savefig('visualizations/{}_returns_ep{}.png'.format(model_name, len_episodes))
     plt.show()
