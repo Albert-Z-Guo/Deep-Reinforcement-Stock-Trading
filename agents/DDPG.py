@@ -4,9 +4,9 @@ from collections import deque
 import numpy as np
 # np.random.seed(3)  # for reproducible Keras operations
 import tensorflow as tf
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.activations import softmax
+from tensorflow.keras.layers import Input, Dense, Concatenate
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 
 from utils import Portfolio
@@ -27,29 +27,24 @@ HIDDEN3_UNITS = 24
 # reference: 
 # https://arxiv.org/pdf/1509.02971.pdf
 class ActorNetwork:
-    def __init__(self, sess, state_size, action_dim, tau, learning_rate, is_eval=False, model_name=""):
+    def __init__(self, sess, state_size, action_dim, buffer_size, tau, learning_rate, is_eval=False, model_name=""):
         self.sess = sess
         self.tau = tau
         self.learning_rate = learning_rate
         self.action_dim = action_dim
         if is_eval == True:
             self.model, self.weights, self.states = self.create_actor_network(state_size, action_dim)
-            self.model.load_weights("saved_models/" + model_name)
+            self.model.load_weights('saved_models/{}_actor.h5'.format(model_name))
         else:
             self.model, self.weights, self.states = self.create_actor_network(state_size, action_dim)
             self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_dim)
             self.action_gradient = tf.compat.v1.placeholder(tf.float32, [None, action_dim])
-            # chain rule: ∂a/∂θ * ∂Q(s,a)/∂a (action_gradients); minus sign for gradient descent
-            self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
-            self.optimize = tf.compat.v1.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.params_grad, self.weights))
+            # chain rule: ∂a/∂θ * ∂Q(s,a)/∂a (action_gradients); minus sign for gradient descent; 1/buffer_size for mean value
+            self.sampled_policy_grad = tf.gradients(self.model.output/buffer_size, self.weights, -self.action_gradient)
+            self.update_actor_policy = tf.compat.v1.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.sampled_policy_grad, self.weights))
 
     def train(self, states_batch, action_grads_batch):
-        outputs, params_grad, _ = self.sess.run([self.model.output, self.params_grad, self.optimize], feed_dict={self.states: states_batch, self.action_gradient: action_grads_batch})
-        print('outputs shape:', outputs.shape)
-        for i in range(len(params_grad)):
-            if i % 2 == 1:
-                print(i, params_grad[i])
-            print('params_grad level {} shape: {}'.format(i, params_grad[i].shape))
+        self.sess.run(self.update_actor_policy, feed_dict={self.states: states_batch, self.action_gradient: action_grads_batch})
 
     def train_target(self):
         actor_weights = self.model.get_weights()
@@ -74,9 +69,13 @@ class CriticNetwork:
         self.tau = tau
         self.learning_rate = learning_rate
         self.action_dim = action_dim
-        self.model, self.action, self.states = self.create_critic_network(state_size, action_dim)
-        self.target_model, self.target_action, self.target_state = self.create_critic_network(state_size, action_dim)
-        self.action_grads = tf.gradients(self.model.output, self.action)
+        if is_eval == True:
+            self.model, self.weights, self.states = self.create_critic_network(state_size, action_dim)
+            self.model.load_weights('saved_models/{}_critic.h5'.format(model_name))
+        else:
+            self.model, self.action, self.states = self.create_critic_network(state_size, action_dim)
+            self.target_model, self.target_action, self.target_state = self.create_critic_network(state_size, action_dim)
+            self.action_grads = tf.gradients(self.model.output, self.action)
 
     def gradients(self, states_batch, actions_batch):
         return self.sess.run(self.action_grads, feed_dict={self.states: states_batch, self.action: actions_batch})[0]
@@ -144,7 +143,7 @@ class Agent(Portfolio):
         learning_rate_actor = 0.001  # learning rate for Actor network
         learning_rate_critic = 0.001  # learning rate for Critic network
 
-        self.actor = ActorNetwork(sess, state_dim, self.action_dim, tau, learning_rate_actor, is_eval, model_name)
+        self.actor = ActorNetwork(sess, state_dim, self.action_dim, self.buffer_size, tau, learning_rate_actor, is_eval, model_name)
         self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, learning_rate_critic)
         sess.run(tf.compat.v1.global_variables_initializer())
 
