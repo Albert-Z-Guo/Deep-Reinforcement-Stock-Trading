@@ -27,7 +27,7 @@ class Agent(Portfolio):
         self.epsilon_min = 0.01  # minimum exploration rate
         self.epsilon_decay = 0.995 # decrease exploration rate as the agent becomes good at trading
         self.is_eval = is_eval
-        self.model = load_model('saved_models/' + model_name) if is_eval else self.model()
+        self.model = load_model('saved_models/{}.h5'.format(model_name)) if is_eval else self.model()
 
         self.tensorboard = TensorBoard(log_dir='./logs/DQN_tensorboard', update_freq=90)
         self.tensorboard.set_model(self.model)

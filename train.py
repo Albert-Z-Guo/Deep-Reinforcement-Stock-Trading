@@ -141,7 +141,8 @@ for e in range(1, num_episode + 1):
         if model_name == 'DQN':
             agent.model.save('saved_models/DQN_ep' + str(e) + '.h5')
         elif model_name == 'DDPG':
-            agent.actor.model.save_weights('saved_models/DDPG_actor_ep' + str(e) + '.h5')
+            agent.actor.model.save_weights('saved_models/DDPG_ep{}_actor.h5'.format(str(e)))
+            agent.critic.model.save_weights('saved_models/DDPG_ep{}_critic.h5'.format(str(e)))
         logger.info('model saved')
 
 logger.info('total training time: {0:.2f} min'.format((time.time() - start_time)/60))
