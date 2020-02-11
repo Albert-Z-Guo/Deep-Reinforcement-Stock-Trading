@@ -42,7 +42,7 @@ class ActorNetwork:
             self.action_gradient = tf.compat.v1.placeholder(tf.float32, [None, action_dim])
             # chain rule: ∂a/∂θ * ∂Q(s,a)/∂a (action_gradients); minus sign for gradient descent; 1/buffer_size for mean value
             self.sampled_policy_grad = tf.gradients(self.model.output/buffer_size, self.model.trainable_weights, -self.action_gradient)
-            self.update_actor_policy = tf.compat.v1.train.AdamOptimizer(learning_rate).apply_gradients(zip(self.sampled_policy_grad, self.model.trainable_weights))
+            self.update_actor_policy = Adam(learning_rate=learning_rate).apply_gradients(zip(self.sampled_policy_grad, self.model.trainable_weights))
 
     def train(self, states_batch, action_grads_batch):
         self.sess.run(self.update_actor_policy, feed_dict={self.states: states_batch, self.action_gradient: action_grads_batch})
