@@ -26,7 +26,7 @@ To install all libraries/dependencies used in this project, run
 pip3 install -r requirement.txt
 ```
 
-To train a DDPG agent or a DQN agent (with window size included), e.g. over S&P 500 from 2010 to 2015, run
+To train a DDPG agent or a DQN agent, e.g. over S&P 500 from 2010 to 2015, run
 ```bash
 python3 train.py --model_name=model_name --stock_name=stock_name
 ```
