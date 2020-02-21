@@ -60,6 +60,11 @@ Note that the following results were obtained with 10 epochs of training only.
 
 ![alt_text](./visualizations/DDPG_^GSPC_2018.png)
 
+### Frequently Asked Questions (FAQ)
+- How is this project different from other price prediction approaches, such as logistic regression or LSTM?
+  - Price prediction approaches like logistic regression have numerical outputs, which have to be mapped (through some interpretation of the predicted price) to action space (e.g. buy, sell, hold) separately. On the other hand, reinforcement learning approaches directly output the agent's action.
+
+
 ### References:
 - [Deep Q-Learning with Keras and Gym](https://keon.io/deep-q-learning/)
 - [Double Deep Q Networks](https://towardsdatascience.com/double-deep-q-networks-905dd8325412)
