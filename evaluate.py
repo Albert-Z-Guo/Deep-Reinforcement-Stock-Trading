@@ -59,12 +59,12 @@ while portfolio_return == 0: # a hack to avoid stationary case
     state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
     for t in range(1, trading_period + 1):
-        if model_name == 'DQN':
-            actions = agent.model.predict(state)[0]
-            action = agent.act(state)
-        elif model_name == 'DDPG':
+        if model_name == 'DDPG':
             actions = agent.act(state, t)
             action = np.argmax(actions)
+        else:
+            actions = agent.model.predict(state)[0]
+            action = agent.act(state)
 
         # print('actions:', actions)
         # print('chosen action:', action)
