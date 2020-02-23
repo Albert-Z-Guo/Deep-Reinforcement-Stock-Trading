@@ -146,7 +146,6 @@ class Agent(Portfolio):
 
         self.actor = ActorNetwork(sess, state_dim, self.action_dim, self.buffer_size, tau, learning_rate_actor, is_eval, model_name)
         self.critic = CriticNetwork(sess, state_dim, self.action_dim, tau, learning_rate_critic)
-        sess.run(tf.compat.v1.global_variables_initializer())
 
         self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs/DDPG_tensorboard', update_freq=90)
         self.tensorboard.set_model(self.critic.model)
