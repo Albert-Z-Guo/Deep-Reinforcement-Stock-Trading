@@ -56,10 +56,7 @@ class Agent(Portfolio):
 
     def experience_replay(self):
         # retrieve recent buffer_size long memory
-        mini_batch = []
-        l = len(self.memory)
-        for i in range(l - self.buffer_size + 1, l):
-            mini_batch.append(self.memory[i])
+        mini_batch = [self.memory[i] for i in range(len(self.memory) - self.buffer_size + 1, len(self.memory))]
 
         for state, actions, reward, next_state, done in mini_batch:
             if not done:
