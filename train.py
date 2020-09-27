@@ -25,10 +25,10 @@ stock_prices = stock_close_prices(stock_name)
 trading_period = len(stock_prices) - 1
 returns_across_episodes = []
 num_experience_replay = 0
-action_dict = {0: 'Hold', 1: 'Hold', 2: 'Sell'}
+action_dict = {0: 'Hold', 1: 'Buy', 2: 'Sell'}
 
 # select learning model
-model = importlib.import_module('agents.{}'.format(model_name))
+model = importlib.import_module(f'agents.{model_name}')
 agent = model.Agent(state_dim=window_size + 3, balance=initial_balance)
 
 def hold(actions):
@@ -56,30 +56,28 @@ def sell(t):
         reward = profit
         return 'Sell: ${:.2f} | Profit: ${:.2f}'.format(stock_prices[t], profit)
 
-# configure logger
-logger = logging.getLogger()
-handler = logging.FileHandler('logs/{}_training_{}.log'.format(model_name, stock_name), mode='w')
-handler.setFormatter(logging.Formatter(fmt='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', datefmt='%m/%d/%Y %H:%M:%S'))
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+# configure logging
+logging.basicConfig(filename=f'logs/{model_name}_training_{stock_name}.log', filemode='w',
+                    format='[%(asctime)s.%(msecs)03d %(filename)s:%(lineno)3s] %(message)s', 
+                    datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
-logger.info('Trading Object:           {}'.format(stock_name))
-logger.info('Trading Period:           {} days'.format(trading_period))
-logger.info('Window Size:              {} days'.format(window_size))
-logger.info('Training Episode:         {}'.format(num_episode))
-logger.info('Model Name:               {}'.format(model_name))
-logger.info('Initial Portfolio Value: ${:,}'.format(initial_balance))
+logging.info(f'Trading Object:           {stock_name}')
+logging.info(f'Trading Period:           {trading_period} days')
+logging.info(f'Window Size:              {window_size} days')
+logging.info(f'Training Episode:         {num_episode}')
+logging.info(f'Model Name:               {model_name}')
+logging.info('Initial Portfolio Value: ${:,}'.format(initial_balance))
 
 start_time = time.time()
 for e in range(1, num_episode + 1):
-    logger.info('\nEpisode: {}/{}'.format(e, num_episode))
+    logging.info(f'\nEpisode: {e}/{num_episode}')
 
     agent.reset() # reset to initial balance and hyperparameters
     state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
 
     for t in range(1, trading_period + 1):
         if t % 100 == 0:
-            logger.info('\n-------------------Period: {}/{}-------------------'.format(t, trading_period))
+            logging.info(f'\n-------------------Period: {t}/{trading_period}-------------------')
 
         reward = 0
         next_state = generate_combined_state(t, window_size, stock_prices, agent.balance, len(agent.inventory))
@@ -93,8 +91,8 @@ for e in range(1, num_episode + 1):
             action = agent.act(state)
         
         # execute position
-        logger.info('Step: {}\tHold signal: {:.4} \tBuy signal: {:.4} \tSell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
-        if action != np.argmax(actions): logger.info("\t\t'{}' is an exploration.".format(action_dict[action]))
+        logging.info('Step: {}\tHold signal: {:.4} \tBuy signal: {:.4} \tSell signal: {:.4}'.format(t, actions[0], actions[1], actions[2]))
+        if action != np.argmax(actions): logging.info(f"\t\t'{action_dict[action]}' is an exploration.")
         if action == 0: # hold
             execution_result = hold(actions)
         if action == 1: # buy
@@ -109,7 +107,7 @@ for e in range(1, num_episode + 1):
             if isinstance(execution_result, tuple): # if execution_result is 'Hold'
                 actions = execution_result[1]
                 execution_result = execution_result[0]
-            logger.info(execution_result)                
+            logging.info(execution_result)                
 
         # calculate reward
         current_portfolio_value = len(agent.inventory) * stock_prices[t] + agent.balance
@@ -129,11 +127,11 @@ for e in range(1, num_episode + 1):
         if len(agent.memory) > agent.buffer_size:
             num_experience_replay += 1
             loss = agent.experience_replay()
-            logger.info('Episode: {}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
+            logging.info('Episode: {}\tLoss: {:.2f}\tAction: {}\tReward: {:.2f}\tBalance: {:.2f}\tNumber of Stocks: {}'.format(e, loss, action_dict[action], reward, agent.balance, len(agent.inventory)))
             agent.tensorboard.on_batch_end(num_experience_replay, {'loss': loss, 'portfolio value': current_portfolio_value})
 
         if done:
-            portfolio_return = evaluate_portfolio_performance(agent, logger)
+            portfolio_return = evaluate_portfolio_performance(agent, logging)
             returns_across_episodes.append(portfolio_return)
 
     # save models periodically
@@ -143,7 +141,7 @@ for e in range(1, num_episode + 1):
         elif model_name == 'DDPG':
             agent.actor.model.save_weights('saved_models/DDPG_ep{}_actor.h5'.format(str(e)))
             agent.critic.model.save_weights('saved_models/DDPG_ep{}_critic.h5'.format(str(e)))
-        logger.info('model saved')
+        logging.info('model saved')
 
-logger.info('total training time: {0:.2f} min'.format((time.time() - start_time)/60))
+logging.info('total training time: {0:.2f} min'.format((time.time() - start_time)/60))
 plot_portfolio_returns_across_episodes(model_name, returns_across_episodes)

@@ -38,7 +38,7 @@ class Agent(Portfolio):
         model.add(Dense(units=32, activation='relu'))
         model.add(Dense(units=8, activation='relu'))
         model.add(Dense(self.action_dim, activation='softmax'))
-        model.compile(loss='mse', optimizer=Adam(lr=0.001))
+        model.compile(loss='mse', optimizer=Adam(lr=0.01))
         return model
 
     def reset(self):

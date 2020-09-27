@@ -31,8 +31,8 @@ class Agent(Portfolio):
         self.epsilon_decay = 0.995 # decrease exploration rate as the agent becomes good at trading
         self.is_eval = is_eval
 
-        self.model = load_model('saved_models/{}.h5'.format(model_name)) if is_eval else self.model()
-        self.model_target = load_model('saved_models/{}_target.h5'.format(model_name)) if is_eval else self.model
+        self.model = load_model(f'saved_models/{model_name}.h5') if is_eval else self.model()
+        self.model_target = load_model(f'saved_models/{model_name}_target.h5') if is_eval else self.model
         self.model_target.set_weights(self.model.get_weights()) # hard copy model parameters to target model parameters
 
         self.tensorboard = TensorBoard(log_dir='./logs/DDQN_tensorboard', update_freq=90)
