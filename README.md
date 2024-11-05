@@ -45,6 +45,7 @@ python3 evaluate.py --model_to_load=model_to_load --stock_name=stock_name
 - `model_to_load`   is the model to load; default is `DQN_ep10`; alternative is `DDPG_ep10` etc.
 - `stock_name`   is the stock used to evaluate the model; default is `^GSPC_2018`, which is S&P 500 from 1/1/2018 to 12/31/2018
 - `initial_balance` is the initial balance of the portfolio; default is `50000`
+- `window_size`     is the span (days) of observation; default is `10`
 
 where `stock_name` can be referred in `data` directory and `model_to_laod` can be referred in `saved_models` directory.
 
