@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser(description='command line options')
 parser.add_argument('--model_to_load', action="store", dest="model_to_load", default='DQN_ep10', help="model name")
 parser.add_argument('--stock_name', action="store", dest="stock_name", default='^GSPC_2018', help="stock name")
 parser.add_argument('--initial_balance', action="store", dest="initial_balance", default=50000, type=int, help='initial balance')
+parser.add_argument('--window_size', action="store", dest="window_size", default=10, type=int, help='window_size')
 inputs = parser.parse_args()
 
 model_to_load = inputs.model_to_load
@@ -20,7 +21,7 @@ model_name = model_to_load.split('_')[0]
 stock_name = inputs.stock_name
 initial_balance = inputs.initial_balance
 display = True
-window_size = 10
+window_size = inputs.window_size
 action_dict = {0: 'Hold', 1: 'Hold', 2: 'Sell'}
 
 # select evaluation model
@@ -51,7 +52,7 @@ logging.basicConfig(filename=f'logs/{model_name}_evaluation_{stock_name}.log', f
 
 portfolio_return = 0
 while portfolio_return == 0: # a hack to avoid stationary case
-    agent = model.Agent(state_dim=13, balance=initial_balance, is_eval=True, model_name=model_to_load)
+    agent = model.Agent(state_dim=window_size+3, balance=initial_balance, is_eval=True, model_name=model_to_load)
     stock_prices = stock_close_prices(stock_name)
     trading_period = len(stock_prices) - 1
     state = generate_combined_state(0, window_size, stock_prices, agent.balance, len(agent.inventory))
