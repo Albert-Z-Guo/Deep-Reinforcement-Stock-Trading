@@ -23,7 +23,7 @@ In the future, we plan to add other state-of-the-art deep reinforcement learning
 ### Getting Started
 To install all libraries/dependencies used in this project, run
 ```bash
-pip3 install -r requirement.txt
+pip3 install -r requirements.txt
 ```
 
 To train a DDPG agent or a DQN agent, e.g. over S&P 500 from 2010 to 2015, run
